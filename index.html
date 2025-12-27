@@ -2,266 +2,245 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord P2P Elite | Redzin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crisálida Neo-Telegram</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-dark: #313338; --bg-side: #2B2D31; --bg-nav: #1E1F22;
-            --text-main: #DBDEE1; --accent: #5865F2; --success: #23A559; --danger: #F23F42;
+            --tg-bg: #0f0f13;
+            --tg-panel: #17171e;
+            --tg-sent: #7000ff;
+            --tg-received: #21212a;
+            --tg-accent: #00f2ff;
+            --tg-text: #ffffff;
+            --tg-gray: #8e8e93;
+            --gamer-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-nav); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
-
-        /* AUTH SCREEN */
-        #auth-overlay {
-            position: fixed; inset: 0; background: #1e1f22;
-            z-index: 1000; display: flex; align-items: center; justify-content: center;
-        }
-        .auth-card {
-            background: var(--bg-dark); padding: 32px; border-radius: 8px; width: 100%; max-width: 400px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5); text-align: center;
-        }
-
-        /* APP LAYOUT */
-        #app-container { display: none; width: 100%; height: 100%; }
-        .sidebar { width: 72px; background: var(--bg-nav); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 8px; border-right: 1px solid #1a1b1e; }
-        .server-icon { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .server-icon:hover { border-radius: 16px; background: var(--accent); color: white; }
-
-        .channels { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
-        .user-card { padding: 12px; background: #232428; margin-top: auto; display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 35px; height: 35px; background: #5865f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
-
-        .main-content { flex: 1; background: var(--bg-dark); display: flex; flex-direction: column; }
-        .chat-header { height: 48px; padding: 0 16px; border-bottom: 1px solid #26272b; display: flex; align-items: center; justify-content: space-between; background: var(--bg-dark); }
-        .messages-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
         
-        .msg { display: flex; gap: 15px; animation: fadeIn 0.2s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .msg-text b { font-size: 14px; color: #fff; margin-right: 8px; }
-        .msg-text small { color: #949ba4; font-size: 11px; }
+        body {
+            background: var(--tg-bg);
+            color: var(--tg-text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-        /* CALL UI */
-        #call-screen { position: fixed; inset: 0; background: #000; z-index: 500; display: none; flex-direction: column; }
-        .video-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 10px; padding: 20px; }
-        video { width: 100%; height: 100%; object-fit: contain; background: #111; border-radius: 12px; }
+        /* --- AUTH / LOGIN --- */
+        #auth-screen {
+            position: fixed; inset: 0; background: var(--tg-bg); z-index: 5000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
+        }
+        .logo-box { width: 80px; height: 80px; background: linear-gradient(135deg, var(--tg-sent), var(--tg-accent)); border-radius: 22px; margin-bottom: 20px; box-shadow: var(--gamer-shadow); }
+        .login-input { width: 100%; max-width: 300px; padding: 14px; background: var(--tg-panel); border: 1px solid #333; border-radius: 12px; color: white; text-align: center; margin-bottom: 15px; outline: none; }
+        .login-btn { width: 100%; max-width: 300px; padding: 14px; background: var(--tg-sent); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; }
 
-        /* BUTTONS */
-        .btn { padding: 10px 20px; border-radius: 4px; border: none; font-weight: 600; cursor: pointer; color: white; transition: 0.2s; }
-        .btn-primary { background: var(--accent); }
-        .btn-success { background: var(--success); }
-        .btn-danger { background: var(--danger); }
-        .input-chat { width: 100%; padding: 12px; background: #383a40; border: none; border-radius: 8px; color: white; outline: none; }
+        /* --- HEADER --- */
+        header {
+            height: 60px; background: var(--tg-panel); display: flex; align-items: center;
+            padding: 0 15px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 100;
+        }
+        .header-info { flex: 1; margin-left: 15px; }
+        .header-info h4 { font-size: 16px; font-weight: 600; }
+        .header-info span { font-size: 12px; color: var(--tg-accent); }
 
-        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--success); padding: 10px 25px; border-radius: 20px; display: none; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        /* --- CHAT AREA --- */
+        #chat-area {
+            flex: 1; overflow-y: auto; padding: 15px;
+            display: flex; flex-direction: column; gap: 8px;
+            background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); /* Pattern sutil */
+        }
+
+        .bubble {
+            max-width: 75%; padding: 10px 14px; border-radius: 18px;
+            font-size: 15px; line-height: 1.4; position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .bubble.received { align-self: flex-start; background: var(--tg-received); border-bottom-left-radius: 4px; border-left: 3px solid var(--tg-accent); }
+        .bubble.sent { align-self: flex-end; background: var(--tg-sent); border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(112, 0, 255, 0.3); }
+        
+        .time { font-size: 10px; opacity: 0.5; float: right; margin-top: 5px; margin-left: 8px; }
+
+        /* --- INPUT BAR --- */
+        .input-container {
+            padding: 10px 15px; background: var(--tg-panel);
+            display: flex; align-items: center; gap: 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        }
+        .message-input {
+            flex: 1; background: var(--tg-bg); border: none; padding: 12px 18px;
+            border-radius: 25px; color: white; outline: none; font-size: 15px;
+        }
+        .action-btn { background: none; border: none; cursor: pointer; color: var(--tg-accent); font-size: 22px; transition: 0.2s; }
+        .action-btn:active { transform: scale(0.9); }
+
+        /* --- CALL HUD (STYLE GAMER) --- */
+        #call-ui {
+            position: fixed; inset: 0; background: #000; z-index: 4000;
+            display: none; flex-direction: column;
+        }
+        .video-wrapper { flex: 1; position: relative; }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; }
+        #local-video {
+            position: absolute; top: 20px; right: 20px; width: 110px; height: 160px;
+            border-radius: 15px; border: 2px solid var(--tg-accent); z-index: 10; object-fit: cover;
+            box-shadow: var(--gamer-shadow);
+        }
+        .call-tools {
+            height: 140px; background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            display: flex; justify-content: center; align-items: center; gap: 30px;
+        }
+        .hangup-btn { width: 65px; height: 65px; background: #ff3b30; border-radius: 50%; border: none; color: white; font-size: 24px; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); }
+
+        /* TOAST */
+        #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: var(--tg-accent); color: #000; padding: 8px 20px; border-radius: 20px; font-weight: 600; display: none; z-index: 6000; }
     </style>
 </head>
 <body>
 
-    <div id="toast">Link de convite copiado!</div>
+    <div id="toast">LINK COPIADO</div>
 
-    <div id="auth-overlay">
-        <div class="auth-card">
-            <h2 style="color:white; margin-bottom:20px;">Crisálida</h2>
-            <input type="text" id="username-input" class="input-chat" placeholder="Seu Nome de Usuário" style="margin-bottom:15px; text-align:center;">
-            <button class="btn btn-primary" style="width:100%" onclick="handleAuth()">Entrar no P2P</button>
-        </div>
+    <div id="auth-screen">
+        <div class="logo-box"></div>
+        <h2 style="margin-bottom: 5px;">Crisálida</h2>
+        <p style="color: var(--tg-gray); margin-bottom: 30px;">Protocolo Gamer P2P</p>
+        <input type="text" id="user-nick" class="login-input" placeholder="Seu Nickname">
+        <button class="login-btn" onclick="login()">CONECTAR</button>
     </div>
 
-    <div id="app-container">
-        <div class="sidebar">
-            <div class="server-icon" style="background: var(--accent); color: white;">C</div>
-            <div class="server-icon" onclick="copyInvite()" title="Convidar Amigo">+</div>
+    <header>
+        <div class="logo-box" style="width: 40px; height: 40px; border-radius: 12px; margin-bottom: 0;"></div>
+        <div class="header-info">
+            <h4 id="target-name">Geral P2P</h4>
+            <span id="status-label">Aguardando parceiro...</span>
         </div>
+        <button class="action-btn" onclick="copyLink()">🔗</button>
+        <button class="action-btn" onclick="startCall()" style="margin-left: 15px;">📞</button>
+    </header>
 
-        <div class="channels">
-            <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid #26272b;">MENSAGENS P2P</div>
-            <div id="peer-list" style="flex:1; padding:10px;">
-                <div id="conn-indicator" style="font-size: 13px; color: #949ba4; padding: 10px; background: #1e1f22; border-radius: 4px; display:none;">
-                    🟢 <span id="friend-name">Conectado</span>
-                </div>
-            </div>
-            <div class="user-card">
-                <div class="avatar" id="my-avatar-char">?</div>
-                <div>
-                    <b id="my-name">Usuário</b><br>
-                    <small style="font-size: 9px; opacity:0.5" id="my-id-label">Carregando...</small>
-                </div>
-            </div>
+    <main id="chat-area">
+        <div class="bubble received">
+            Bem-vindo ao canal encriptado.
+            <span class="time">00:00</span>
         </div>
+    </main>
 
-        <div class="main-content">
-            <div class="chat-header">
-                <strong id="chat-title"># geral</strong>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn btn-success" style="padding: 5px 15px;" onclick="startCall('video')">📹 Video</button>
-                    <button class="btn btn-primary" style="padding: 5px 15px;" onclick="startCall('screen')">🖥️ Tela</button>
-                </div>
-            </div>
-            <div class="messages-area" id="msg-container"></div>
-            <div style="padding: 16px;">
-                <input type="text" id="chat-input" class="input-chat" placeholder="Conversar direto via WebRTC..." onkeydown="if(event.key==='Enter') sendMsg()">
-            </div>
-        </div>
+    <div class="input-container">
+        <input type="text" id="msg-input" class="message-input" placeholder="Mensagem..." onkeydown="if(event.key==='Enter') send()">
+        <button class="action-btn" onclick="send()" style="color: var(--tg-sent);">🚀</button>
     </div>
 
-    <div id="call-screen">
-        <div class="video-grid">
-            <video id="local-video" autoplay muted></video>
-            <video id="remote-video" autoplay></video>
+    <div id="call-ui">
+        <video id="local-video" autoplay muted playsinline></video>
+        <div class="video-wrapper">
+            <video id="remote-video" autoplay playsinline></video>
         </div>
-        <div style="height: 100px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(0,0,0,0.8);">
-            <button class="btn btn-danger" onclick="endCall()">Desligar Chamada</button>
+        <div class="call-tools">
+            <button class="hangup-btn" onclick="endCall()">✖</button>
+            <button class="action-btn" style="color:white; font-size: 30px;">🎙️</button>
         </div>
     </div>
 
     <script>
         let peer, conn, myStream;
-        let myUser = { name: "" };
+        let myNick = "";
 
-        // 1. INICIALIZAÇÃO E PERSISTÊNCIA
-        window.onload = () => {
-            const saved = localStorage.getItem('red_p2p_user');
-            if (saved) {
-                myUser = JSON.parse(saved);
-                startApp();
-            }
-            loadHistory();
-        };
-
-        function handleAuth() {
-            const name = document.getElementById('username-input').value.trim();
-            if (!name) return alert("Insira um nome!");
-            myUser.name = name;
-            localStorage.setItem('red_p2p_user', JSON.stringify(myUser));
-            startApp();
+        function login() {
+            const nick = document.getElementById('user-nick').value.trim();
+            if(!nick) return;
+            myNick = nick;
+            document.getElementById('auth-screen').style.display = 'none';
+            initPeer();
         }
 
-        function startApp() {
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('app-container').style.display = 'flex';
-            document.getElementById('my-name').innerText = myUser.name;
-            document.getElementById('my-avatar-char').innerText = myUser.name[0].toUpperCase();
-
+        function initPeer() {
             peer = new Peer();
             peer.on('open', id => {
-                document.getElementById('my-id-label').innerText = "ID: " + id;
+                console.log("Seu ID:", id);
                 checkInvite();
             });
 
             peer.on('connection', c => {
                 conn = c;
-                setupChatHandlers();
+                setupEvents();
             });
 
             peer.on('call', call => {
-                navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-                    myStream = stream;
-                    document.getElementById('call-screen').style.display = 'flex';
-                    document.getElementById('local-video').srcObject = stream;
-                    call.answer(stream);
-                    call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-                });
+                if(confirm("CHAMADA ENTRANTE. ATENDER?")) {
+                    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
+                        myStream = s;
+                        document.getElementById('call-ui').style.display = 'flex';
+                        document.getElementById('local-video').srcObject = s;
+                        call.answer(s);
+                        call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
+                    });
+                }
             });
         }
 
-        // 2. CHAT E HISTÓRICO
-        function setupChatHandlers() {
+        function setupEvents() {
             conn.on('open', () => {
-                document.getElementById('conn-indicator').style.display = 'block';
-                conn.send({type: 'identity', name: myUser.name});
-                
+                conn.send({type: 'hi', name: myNick});
+                document.getElementById('status-label').innerText = "Online";
                 conn.on('data', data => {
-                    if(data.type === 'identity') {
-                        document.getElementById('friend-name').innerText = data.name;
-                        document.getElementById('chat-title').innerText = "# " + data.name;
+                    if(data.type === 'hi') {
+                        document.getElementById('target-name').innerText = data.name;
                     } else {
-                        addMessage(data.user, data.text, false);
-                        saveMessage(data.user, data.text);
+                        render(data.name, data.msg, 'received');
                     }
                 });
             });
         }
 
-        function sendMsg() {
-            const input = document.getElementById('chat-input');
+        function send() {
+            const input = document.getElementById('msg-input');
             if(!input.value || !conn) return;
-            const data = { user: myUser.name, text: input.value };
-            conn.send(data);
-            addMessage(myUser.name, input.value, true);
-            saveMessage(myUser.name, input.value);
+            conn.send({name: myNick, msg: input.value});
+            render(myNick, input.value, 'sent');
             input.value = "";
         }
 
-        function addMessage(user, text, isMe) {
+        function render(name, msg, type) {
+            const area = document.getElementById('chat-area');
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             const div = document.createElement('div');
-            div.className = 'msg';
-            div.innerHTML = `
-                <div class="avatar" style="background:${isMe ? '#5865f2' : '#444'}">${user[0].toUpperCase()}</div>
-                <div class="msg-text">
-                    <b>${user}</b> <small>${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
-                    <p>${text}</p>
-                </div>
-            `;
-            const container = document.getElementById('msg-container');
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            div.className = `bubble ${type}`;
+            div.innerHTML = `${msg} <span class="time">${time}</span>`;
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
         }
 
-        // SALVAR NO LOCALSTORAGE (HISTÓRICO)
-        function saveMessage(user, text) {
-            let history = JSON.parse(localStorage.getItem('chat_history') || '[]');
-            history.push({user, text, time: new Date().getTime()});
-            if(history.length > 50) history.shift(); // Limite de 50 mensagens
-            localStorage.setItem('chat_history', JSON.stringify(history));
-        }
-
-        function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('chat_history') || '[]');
-            history.forEach(m => addMessage(m.user, m.text, m.user === myUser.name));
-        }
-
-        // 3. CALL E COMPARTILHAMENTO DE TELA
-        async function startCall(type) {
-            if(!conn) return alert("Aguarde conexão com um amigo!");
-            try {
-                const stream = type === 'video' 
-                    ? await navigator.mediaDevices.getUserMedia({video: true, audio: true})
-                    : await navigator.mediaDevices.getDisplayMedia({video: true});
-                
-                myStream = stream;
-                document.getElementById('call-screen').style.display = 'flex';
-                document.getElementById('local-video').srcObject = stream;
-                
-                const call = peer.call(conn.peer, stream);
-                call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-            } catch (e) { console.error(e); }
+        async function startCall() {
+            if(!conn) return;
+            myStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+            document.getElementById('call-ui').style.display = 'flex';
+            document.getElementById('local-video').srcObject = myStream;
+            const call = peer.call(conn.peer, myStream);
+            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
         }
 
         function endCall() {
-            document.getElementById('call-screen').style.display = 'none';
+            document.getElementById('call-ui').style.display = 'none';
             if(myStream) myStream.getTracks().forEach(t => t.stop());
         }
 
-        // 4. CONVITES
-        function copyInvite() {
-            const url = `${window.location.origin}${window.location.pathname}?invite=${peer.id}`;
+        function copyLink() {
+            const url = `${window.location.origin}${window.location.pathname}?ref=${peer.id}`;
             navigator.clipboard.writeText(url);
             const t = document.getElementById('toast');
             t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
+            setTimeout(() => t.style.display = 'none', 2000);
         }
 
         function checkInvite() {
-            const inv = new URLSearchParams(window.location.search).get('invite');
-            if(inv) {
-                conn = peer.connect(inv);
-                setupChatHandlers();
+            const ref = new URLSearchParams(window.location.search).get('ref');
+            if(ref) {
+                conn = peer.connect(ref);
+                setupEvents();
             }
         }
     </script>
