@@ -24,22 +24,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
         body { background: var(--bg); color: var(--text); height: 100dvh; display: flex; justify-content: center; overflow: hidden; }
         
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-
-        /* APP CONTAINER */
         #app { width: 100%; max-width: 500px; height: 100%; position: relative; display: flex; flex-direction: column; background: var(--bg); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
 
-        /* AUTH SCREEN */
-        #auth-screen { position: absolute; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; transition: 0.5s; }
+        /* AUTH */
+        #auth-screen { position: absolute; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
         .auth-content { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 15px; }
         
         /* HEADER */
         header { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; background: rgba(10,10,11,0.9); border-bottom: 1px solid var(--border); z-index: 800; backdrop-filter: blur(10px); }
         .user-meta { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 
-        /* AVATARS */
         .avatar { width: 44px; height: 44px; border-radius: 14px; background: var(--card); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary); overflow: hidden; flex-shrink: 0; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -53,28 +47,21 @@
         .sent { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
         .received { align-self: flex-start; background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
 
-        /* INPUTS - CORRIGIDO */
+        /* INPUT BAR - CORRIGIDO */
         .input-bar { padding: 15px; display: flex; gap: 10px; background: var(--surface); border-top: 1px solid var(--border); align-items: center; }
-        .field { flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; color: #fff; padding: 14px; font-size: 15px; outline: none; transition: 0.2s; height: 50px; }
-        .field:focus { border-color: var(--primary); }
+        .field { flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; color: #fff; padding: 14px; font-size: 15px; outline: none; height: 50px; }
         .btn { padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; }
         
-        /* PROFILES */
-        .profile-hero { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; text-align: center; overflow-y: auto; }
-        .big-av { width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--card); outline: 2px solid var(--primary); margin-bottom: 20px; overflow: hidden; background: var(--card); display: flex; align-items: center; justify-content: center; }
-        .big-av img { width: 100%; height: 100%; object-fit: cover; }
-        .info-box { background: var(--card); padding: 20px; border-radius: 16px; width: 100%; margin-top: 20px; text-align: left; border: 1px solid var(--border); }
-        
-        /* FAB */
         .fab { position: absolute; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--primary); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; box-shadow: 0 8px 20px var(--primary-glow); cursor: pointer; z-index: 500; }
 
         /* CALL UI */
-        .call-ui { position: fixed; inset: 0; z-index: 99999; background: #000; display: none; flex-direction: column; }
+        .call-ui { position: fixed; inset: 0; z-index: 99999; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; }
         .call-ui.active { display: flex; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 100px; height: 150px; position: absolute; bottom: 100px; right: 20px; border-radius: 12px; border: 2px solid var(--primary); object-fit: cover; background: #222; z-index: 10; }
-        .call-controls { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center; gap: 20px; }
-        .end-call { width: 60px; height: 60px; border-radius: 50%; background: #ff3b30; border: none; color: white; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+        #local-video { width: 100px; height: 150px; position: absolute; bottom: 120px; right: 20px; border-radius: 12px; border: 2px solid var(--primary); object-fit: cover; z-index: 10; background: #111; }
+        .call-info { position: relative; z-index: 5; text-align: center; margin-bottom: 20px; }
+        .call-controls { position: absolute; bottom: 40px; display: flex; gap: 20px; z-index: 20; }
+        .end-call { width: 65px; height: 65px; border-radius: 50%; background: #ff3b30; border: none; color: white; font-size: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
@@ -83,14 +70,14 @@
     <div id="auth-screen">
         <div style="margin-bottom: 40px; text-align: center;">
             <i class="ri-shield-keyhole-fill" style="font-size: 64px; color: var(--primary);"></i>
-            <h1 style="font-size: 28px; font-weight: 800;">CRIMSON</h1>
-            <p style="color: var(--text-dim); font-size: 14px;">ENTERPRISE EDITION</p>
+            <h1>CRIMSON</h1>
+            <p style="color: var(--text-dim);">ENTERPRISE EDITION</p>
         </div>
         <div class="auth-content">
-            <input type="text" id="auth-id" class="field" placeholder="Usuário (ID)" style="text-align:center;">
+            <input type="text" id="auth-id" class="field" placeholder="ID do Usuário" style="text-align:center;">
             <input type="password" id="auth-pass" class="field" placeholder="Senha" style="text-align:center;">
-            <button class="btn" id="btn-login" onclick="sys.auth(false)">ENTRAR</button>
-            <button class="btn" id="btn-reg" onclick="sys.auth(true)" style="background: var(--card); border: 1px solid var(--border);">CRIAR CONTA</button>
+            <button class="btn" onclick="sys.auth(false)">ENTRAR</button>
+            <button class="btn" onclick="sys.auth(true)" style="background: var(--card); border: 1px solid var(--border);">CRIAR CONTA</button>
         </div>
     </div>
 
@@ -98,8 +85,8 @@
         <div class="user-meta" onclick="sys.openView('view-me')">
             <div class="avatar" id="header-av"></div>
             <div>
-                <div id="header-name" style="font-weight: 700; font-size: 15px;">...</div>
-                <div style="font-size: 11px; color: var(--primary); font-weight: 700;">ONLINE</div>
+                <div id="header-name" style="font-weight: 700;">...</div>
+                <div style="font-size: 11px; color: var(--primary);">ONLINE</div>
             </div>
         </div>
         <i class="ri-settings-4-line" style="font-size: 24px; color: var(--text-dim);" onclick="sys.openView('view-me')"></i>
@@ -110,15 +97,12 @@
 
     <div id="view-chat" class="view">
         <header>
-            <i class="ri-arrow-left-s-line" onclick="sys.closeChat()" style="font-size: 28px; padding-right: 10px; cursor: pointer;"></i>
-            <div style="flex:1; display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="sys.showContact()">
+            <i class="ri-arrow-left-s-line" onclick="sys.closeChat()" style="font-size: 28px; cursor: pointer;"></i>
+            <div style="flex:1; display:flex; align-items:center; gap:10px; margin-left:10px;" onclick="sys.showContact()">
                 <div class="avatar" id="chat-av" style="width:36px; height:36px;"></div>
-                <div>
-                    <div id="chat-name" style="font-weight: 700; font-size: 15px;">Nome</div>
-                    <div style="font-size: 11px; color: var(--text-dim);">Toque para ver perfil</div>
-                </div>
+                <div id="chat-name" style="font-weight: 700;">Nome</div>
             </div>
-            <div style="display:flex; gap:15px; font-size: 22px; color: var(--primary);">
+            <div style="display:flex; gap:20px; font-size: 22px; color: var(--primary);">
                 <i class="ri-phone-fill" onclick="sys.call(false)"></i>
                 <i class="ri-vidicon-fill" onclick="sys.call(true)"></i>
             </div>
@@ -126,68 +110,38 @@
         <div id="messages" class="chat-area"></div>
         <div class="input-bar">
             <input type="text" id="msg-input" class="field" placeholder="Mensagem...">
-            <button class="btn" style="width:50px; height:50px; padding:0; flex-shrink:0;" onclick="sys.send()"><i class="ri-send-plane-fill" style="font-size:20px;"></i></button>
+            <button class="btn" style="width:50px; height:50px; flex-shrink:0; padding:0;" onclick="sys.send()">
+                <i class="ri-send-plane-fill" style="font-size: 20px;"></i>
+            </button>
         </div>
     </div>
 
     <div id="view-add" class="view">
         <header>
             <i class="ri-close-line" onclick="sys.closeView('view-add')" style="font-size: 28px;"></i>
-            <h3 style="flex:1; text-align:center; padding-right:28px;">Nova Conexão</h3>
+            <h3 style="flex:1; text-align:center; margin-right:28px;">Adicionar</h3>
         </header>
         <div style="padding: 30px;">
-            <p style="color:var(--text-dim); margin-bottom:10px;">ID do Usuário</p>
-            <input type="text" id="target-id" class="field" style="margin-bottom: 20px;">
+            <input type="text" id="target-id" class="field" placeholder="ID do destinatário" style="width:100%; margin-bottom:20px;">
             <button class="btn" style="width:100%;" onclick="sys.addContact()">CONECTAR</button>
         </div>
     </div>
 
     <div id="view-me" class="view">
-        <header>
-            <i class="ri-arrow-left-s-line" onclick="sys.closeView('view-me')" style="font-size: 28px;"></i>
-            <h3 style="flex:1; text-align:center; padding-right:28px;">Editar Perfil</h3>
-        </header>
-        <div class="profile-hero">
-            <div class="big-av" id="me-large-av"></div>
-            
-            <div class="info-box">
-                <label style="color:var(--text-dim); font-size:12px;">NOME DE EXIBIÇÃO</label>
-                <input type="text" id="edit-name" class="field" style="width:100%; margin-top:5px; background:var(--bg);">
-            </div>
-
-            <div class="info-box">
-                <label style="color:var(--text-dim); font-size:12px;">RECADO (BIO)</label>
-                <input type="text" id="edit-bio" class="field" style="width:100%; margin-top:5px; background:var(--bg);">
-            </div>
-
-            <div class="info-box">
-                <label style="color:var(--text-dim); font-size:12px;">FOTO DE PERFIL (URL)</label>
-                <input type="text" id="edit-pic" class="field" style="width:100%; margin-top:5px; background:var(--bg);" placeholder="https://...">
-            </div>
-
-            <button class="btn" style="width:100%; margin-top:30px;" onclick="sys.saveProfile()">SALVAR</button>
-            <button class="btn" style="width:100%; margin-top:15px; background:transparent; border:1px solid #ff3b30; color:#ff3b30;" onclick="sys.logout()">SAIR DA CONTA</button>
-        </div>
-    </div>
-
-    <div id="view-contact" class="view">
-        <header>
-            <i class="ri-arrow-left-s-line" onclick="sys.closeView('view-contact')" style="font-size: 28px;"></i>
-            <h3 style="flex:1; text-align:center; padding-right:28px;">Perfil</h3>
-        </header>
-        <div class="profile-hero">
-            <div class="big-av" id="contact-large-av"></div>
-            <h2 id="contact-real-name" style="margin-bottom:5px;">Nome</h2>
-            <div id="contact-real-id" style="color:var(--primary); font-family:monospace; background:rgba(255,0,51,0.1); padding:4px 10px; border-radius:6px;">@id</div>
-            
-            <div class="info-box">
-                <label style="color:var(--text-dim); font-size:12px; font-weight:bold;">RECADO</label>
-                <p id="contact-real-bio" style="margin-top:10px; line-height:1.5; color:#fff;">...</p>
-            </div>
+        <header><i class="ri-arrow-left-s-line" onclick="sys.closeView('view-me')" style="font-size: 28px;"></i></header>
+        <div style="padding:20px; display:flex; flex-direction:column; align-items:center;">
+            <div class="avatar" id="me-large-av" style="width:100px; height:100px; margin-bottom:20px; font-size:30px;"></div>
+            <input type="text" id="edit-name" class="field" placeholder="Nome" style="width:100%; margin-bottom:10px;">
+            <input type="text" id="edit-pic" class="field" placeholder="URL da Foto" style="width:100%; margin-bottom:20px;">
+            <button class="btn" style="width:100%;" onclick="sys.saveProfile()">SALVAR</button>
+            <button class="btn" style="width:100%; margin-top:10px; background:#222;" onclick="sys.logout()">SAIR</button>
         </div>
     </div>
 
     <div id="call-ui" class="call-ui">
+        <div class="call-info">
+            <div id="call-status" style="font-size:18px; color:var(--primary); font-weight:bold; letter-spacing:2px;">CHAMADA EM CURSO</div>
+        </div>
         <video id="remote-video" autoplay playsinline></video>
         <video id="local-video" autoplay muted playsinline></video>
         <div class="call-controls">
@@ -198,328 +152,78 @@
 
 <script>
 const sys = {
-    // Estado Global
-    peer: null,
-    uid: null,
-    db: {}, // Dados persistentes (localstorage)
-    activeConns: {}, // Conexões WebRTC ativas na RAM
-    currentChat: null,
-    callStream: null,
-    incomingCall: null,
+    peer: null, uid: null, db: {}, activeConns: {}, currentChat: null, callStream: null, incomingCall: null,
 
     init() {
-        // Carregar DB
         const raw = localStorage.getItem('crimson_db');
         this.db = raw ? JSON.parse(raw) : {};
-        
-        // Verificar Sessão
         const session = localStorage.getItem('crimson_session');
-        if(session && this.db[session]) {
-            this.uid = session;
-            this.startApp();
-        } else {
-            document.getElementById('auth-screen').style.display = 'flex';
-        }
-
-        // Enter para enviar
-        document.getElementById('msg-input').onkeydown = (e) => {
-            if(e.key === 'Enter') this.send();
-        };
+        if(session && this.db[session]) { this.uid = session; this.startApp(); }
+        document.getElementById('msg-input').onkeydown = (e) => { if(e.key === 'Enter') this.send(); };
     },
 
-    // --- AUTENTICAÇÃO ---
-    auth(isRegister) {
+    auth(reg) {
         const id = document.getElementById('auth-id').value.trim().toLowerCase();
         const pass = document.getElementById('auth-pass').value.trim();
-
-        if(id.length < 3 || pass.length < 3) return alert("Mínimo 3 caracteres");
-
-        if(isRegister) {
-            if(this.db[id]) return alert("ID já existe");
-            this.db[id] = { pass, name: id, bio: "Olá, estou usando Crimson.", pic: "", friends: {}, history: {} };
-            this.saveDb();
-            alert("Conta criada! Clique em Entrar.");
+        if(!id || !pass) return;
+        if(reg) {
+            if(this.db[id]) return alert("ID ocupado");
+            this.db[id] = { pass, name: id, pic: "", friends: {} };
+            this.saveDb(); alert("Criado!");
         } else {
-            if(!this.db[id] || this.db[id].pass !== pass) return alert("Credenciais inválidas");
-            this.uid = id;
-            localStorage.setItem('crimson_session', id);
-            this.startApp();
+            if(!this.db[id] || this.db[id].pass !== pass) return alert("Erro");
+            this.uid = id; localStorage.setItem('crimson_session', id); this.startApp();
         }
     },
 
     startApp() {
         document.getElementById('auth-screen').style.display = 'none';
-        this.setupPeer();
-        this.updateHeader();
-        this.renderHome();
-    },
-
-    logout() {
-        localStorage.removeItem('crimson_session');
-        location.reload();
-    },
-
-    saveDb() {
-        localStorage.setItem('crimson_db', JSON.stringify(this.db));
-    },
-
-    // --- REDE (PEERJS) ---
-    setupPeer() {
         this.peer = new Peer(this.uid);
-        
-        this.peer.on('open', (id) => {
-            console.log('Conectado à rede como:', id);
-        });
-
-        // Receber Conexão (Chat)
-        this.peer.on('connection', (conn) => {
-            this.activeConns[conn.peer] = conn;
-            conn.on('data', (data) => this.handleData(conn.peer, data));
-            conn.on('open', () => this.sendProfile(conn)); // Enviar meu perfil ao conectar
-        });
-
-        // Receber Chamada
-        this.peer.on('call', (call) => {
-            if(confirm(`Recebendo chamada de ${call.peer}. Aceitar?`)) {
-                this.incomingCall = call;
-                this.answerCall(true); // Default video
-            }
-        });
-
-        this.peer.on('error', (err) => {
-            console.error(err);
-            if(err.type === 'peer-unavailable') alert("Usuário offline ou não existe.");
-        });
+        this.peer.on('connection', c => this.setupConn(c));
+        this.peer.on('call', call => { if(confirm("Atender chamada?")) { this.incomingCall = call; this.answerCall(true); } });
+        this.updateHeader(); this.renderHome();
     },
 
-    // --- MENSAGENS E DADOS ---
-    // Envia perfil (Sync)
-    sendProfile(conn) {
-        const me = this.db[this.uid];
-        conn.send({
-            type: 'sync',
-            name: me.name,
-            bio: me.bio,
-            pic: me.pic
+    setupConn(conn) {
+        this.activeConns[conn.peer] = conn;
+        conn.on('data', data => {
+            if(data.type === 'msg') {
+                this.pushMsg(conn.peer, conn.peer, data.text);
+                if(this.currentChat === conn.peer) this.renderMessages(); else this.renderHome();
+            }
         });
-    },
-
-    handleData(senderId, data) {
-        // Se for sincronização de perfil
-        if(data.type === 'sync') {
-            if(!this.db[this.uid].friends[senderId]) {
-                this.db[this.uid].friends[senderId] = { history: [] }; // Cria amigo se não existir
-            }
-            // Atualiza dados do amigo
-            const friend = this.db[this.uid].friends[senderId];
-            friend.name = data.name;
-            friend.bio = data.bio;
-            friend.pic = data.pic;
-            this.saveDb();
-            this.renderHome();
-            if(this.currentChat === senderId) this.updateChatHeader(senderId);
-        }
-
-        // Se for mensagem de texto
-        if(data.type === 'msg') {
-            this.pushMessage(senderId, senderId, data.text);
-            if(this.currentChat === senderId) {
-                this.renderMessages();
-            } else {
-                this.renderHome(); // Atualiza lista para mostrar msg nova
-            }
-        }
     },
 
     send() {
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
-        const target = this.currentChat;
-        if(!text || !target) return;
-
-        // 1. Salvar no meu histórico
-        this.pushMessage(target, this.uid, text);
+        if(!text || !this.currentChat) return;
+        this.pushMsg(this.currentChat, this.uid, text);
         this.renderMessages();
         input.value = '';
 
-        // 2. Enviar pela rede
-        const sendPayload = () => {
-            const conn = this.activeConns[target];
-            if(conn && conn.open) {
-                conn.send({ type: 'msg', text: text });
-                conn.send({ type: 'sync', name: this.db[this.uid].name, bio: this.db[this.uid].bio, pic: this.db[this.uid].pic }); // Reforça sync
-            }
-        };
-
-        if(this.activeConns[target] && this.activeConns[target].open) {
-            sendPayload();
+        let conn = this.activeConns[this.currentChat];
+        if(conn && conn.open) {
+            conn.send({ type: 'msg', text });
         } else {
-            // Tenta abrir conexão
-            const conn = this.peer.connect(target);
-            conn.on('open', () => {
-                this.activeConns[target] = conn;
-                // Configura listener de volta
-                conn.on('data', (d) => this.handleData(target, d));
-                sendPayload();
-            });
+            conn = this.peer.connect(this.currentChat);
+            conn.on('open', () => { this.activeConns[this.currentChat] = conn; conn.send({ type: 'msg', text }); });
+            this.setupConn(conn);
         }
     },
 
-    pushMessage(friendId, senderId, text) {
-        if(!this.db[this.uid].friends[friendId]) {
-            this.db[this.uid].friends[friendId] = { history: [] };
-        }
-        this.db[this.uid].friends[friendId].history.push({
-            sender: senderId,
-            text: text,
-            time: Date.now()
-        });
+    pushMsg(fId, sId, text) {
+        if(!this.db[this.uid].friends[fId]) this.db[this.uid].friends[fId] = { history: [] };
+        this.db[this.uid].friends[fId].history.push({ sender: sId, text, time: Date.now() });
         this.saveDb();
     },
 
-    // --- INTERFACE (UI) ---
-    renderHome() {
-        const list = document.getElementById('chat-list');
-        list.innerHTML = '';
-        const friends = this.db[this.uid].friends;
-        
-        // Ordenar por mensagem mais recente
-        const ids = Object.keys(friends).sort((a,b) => {
-            const histA = friends[a].history;
-            const histB = friends[b].history;
-            const timeA = histA.length ? histA[histA.length-1].time : 0;
-            const timeB = histB.length ? histB[histB.length-1].time : 0;
-            return timeB - timeA;
-        });
-
-        ids.forEach(id => {
-            const f = friends[id];
-            const lastMsg = f.history.length ? f.history[f.history.length-1].text : 'Nova conexão';
-            const htmlAv = f.pic ? `<img src="${f.pic}">` : id[0].toUpperCase();
-            
-            const div = document.createElement('div');
-            div.style.cssText = "display:flex; align-items:center; gap:15px; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;";
-            div.innerHTML = `
-                <div class="avatar">${htmlAv}</div>
-                <div style="flex:1; overflow:hidden;">
-                    <div style="font-weight:600; font-size:15px; margin-bottom:2px;">${f.name || id}</div>
-                    <div style="color:var(--text-dim); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${lastMsg}</div>
-                </div>
-            `;
-            div.onclick = () => this.openChat(id);
-            list.appendChild(div);
-        });
-    },
-
-    addContact() {
-        const id = document.getElementById('target-id').value.trim().toLowerCase();
-        if(id === this.uid) return alert("Você não pode adicionar a si mesmo.");
-        if(id) {
-            if(!this.db[this.uid].friends[id]) {
-                this.db[this.uid].friends[id] = { name: id, history: [], bio: '', pic: '' };
-                this.saveDb();
-            }
-            this.closeView('view-add');
-            this.openChat(id);
-            // Tenta conectar para buscar perfil
-            const conn = this.peer.connect(id);
-            conn.on('open', () => {
-                this.activeConns[id] = conn;
-                this.sendProfile(conn);
-                conn.on('data', d => this.handleData(id, d));
-            });
-        }
-    },
-
-    openChat(id) {
-        this.currentChat = id;
-        this.updateChatHeader(id);
-        this.renderMessages();
-        this.openView('view-chat');
-        // Assegura conexão
-        if(!this.activeConns[id] || !this.activeConns[id].open) {
-            const conn = this.peer.connect(id);
-            conn.on('open', () => {
-                this.activeConns[id] = conn;
-                this.sendProfile(conn);
-                conn.on('data', d => this.handleData(id, d));
-            });
-        }
-    },
-
-    updateChatHeader(id) {
-        const f = this.db[this.uid].friends[id];
-        document.getElementById('chat-name').innerText = f.name || id;
-        document.getElementById('chat-av').innerHTML = f.pic ? `<img src="${f.pic}">` : id[0].toUpperCase();
-    },
-
-    renderMessages() {
-        const area = document.getElementById('messages');
-        area.innerHTML = '';
-        const msgs = this.db[this.uid].friends[this.currentChat].history || [];
-        
-        msgs.forEach(m => {
-            const div = document.createElement('div');
-            div.className = `bubble ${m.sender === this.uid ? 'sent' : 'received'}`;
-            div.innerText = m.text;
-            area.appendChild(div);
-        });
-        area.scrollTop = area.scrollHeight;
-    },
-
-    closeChat() {
-        this.currentChat = null;
-        this.closeView('view-chat');
-        this.renderHome();
-    },
-
-    // --- PERFIL ---
-    saveProfile() {
-        const me = this.db[this.uid];
-        me.name = document.getElementById('edit-name').value;
-        me.bio = document.getElementById('edit-bio').value;
-        me.pic = document.getElementById('edit-pic').value;
-        this.saveDb();
-        this.updateHeader();
-        this.closeView('view-me');
-        // Propagar mudanças para conexões ativas
-        Object.values(this.activeConns).forEach(conn => {
-            if(conn.open) this.sendProfile(conn);
-        });
-    },
-
-    updateHeader() {
-        const me = this.db[this.uid];
-        document.getElementById('header-name').innerText = me.name || this.uid;
-        document.getElementById('edit-name').value = me.name || "";
-        document.getElementById('edit-bio').value = me.bio || "";
-        document.getElementById('edit-pic').value = me.pic || "";
-        
-        const html = me.pic ? `<img src="${me.pic}">` : this.uid[0].toUpperCase();
-        document.getElementById('header-av').innerHTML = html;
-        document.getElementById('me-large-av').innerHTML = html.replace('width:100%', 'width:100%');
-    },
-
-    showContact() {
-        if(!this.currentChat) return;
-        const f = this.db[this.uid].friends[this.currentChat];
-        
-        document.getElementById('contact-real-name').innerText = f.name || this.currentChat;
-        document.getElementById('contact-real-id').innerText = '@' + this.currentChat;
-        document.getElementById('contact-real-bio').innerText = f.bio || "Sem recado.";
-        
-        const html = f.pic ? `<img src="${f.pic}">` : `<span style="font-size:40px; color:var(--primary); font-weight:bold;">${this.currentChat[0].toUpperCase()}</span>`;
-        document.getElementById('contact-large-av').innerHTML = html;
-        
-        this.openView('view-contact');
-    },
-
-    // --- CHAMADAS ---
-    async getStream(video) {
+    // --- CHAMADAS CORRIGIDAS ---
+    async getStream(videoRequested) {
         try {
-            return await navigator.mediaDevices.getUserMedia({ video: video, audio: true });
+            return await navigator.mediaDevices.getUserMedia({ video: videoRequested, audio: true });
         } catch(e) {
-            alert("Erro na câmera/mic. Permita o acesso e use HTTPS.");
+            alert("Erro ao acessar mídia. Verifique o HTTPS e permissões.");
             return null;
         }
     },
@@ -527,49 +231,72 @@ const sys = {
     async call(isVideo) {
         const stream = await this.getStream(isVideo);
         if(!stream) return;
-        
         this.callStream = stream;
-        document.getElementById('local-video').srcObject = stream;
-        document.getElementById('call-ui').classList.add('active');
         
+        const localVid = document.getElementById('local-video');
+        localVid.style.display = isVideo ? 'block' : 'none';
+        if(isVideo) localVid.srcObject = stream;
+
+        document.getElementById('call-ui').classList.add('active');
         const call = this.peer.call(this.currentChat, stream);
-        this.handleMediaCall(call);
+        this.handleMediaCall(call, isVideo);
     },
 
     async answerCall(isVideo) {
         const stream = await this.getStream(isVideo);
         if(!stream) return;
-
         this.callStream = stream;
-        document.getElementById('local-video').srcObject = stream;
-        document.getElementById('call-ui').classList.add('active');
         
+        const localVid = document.getElementById('local-video');
+        localVid.style.display = isVideo ? 'block' : 'none';
+        if(isVideo) localVid.srcObject = stream;
+
+        document.getElementById('call-ui').classList.add('active');
         this.incomingCall.answer(stream);
-        this.handleMediaCall(this.incomingCall);
+        this.handleMediaCall(this.incomingCall, isVideo);
     },
 
-    handleMediaCall(call) {
+    handleMediaCall(call, isVideo) {
         this.incomingCall = call;
-        call.on('stream', remoteStream => {
-            const vid = document.getElementById('remote-video');
-            vid.srcObject = remoteStream;
-            vid.play();
+        call.on('stream', rs => {
+            const rv = document.getElementById('remote-video');
+            rv.srcObject = rs;
+            rv.style.display = isVideo ? 'block' : 'none';
         });
-        call.on('close', () => this.endCall(true));
+        call.on('close', () => this.endCall());
     },
 
-    endCall(remoteClosed) {
+    endCall() {
         if(this.incomingCall) this.incomingCall.close();
         if(this.callStream) this.callStream.getTracks().forEach(t => t.stop());
         document.getElementById('call-ui').classList.remove('active');
-        this.incomingCall = null;
-        this.callStream = null;
-        if(!remoteClosed) alert("Chamada Encerrada");
     },
 
-    // UTILS
+    // UI
+    renderHome() {
+        const list = document.getElementById('chat-list'); list.innerHTML = '';
+        Object.keys(this.db[this.uid].friends).forEach(id => {
+            const div = document.createElement('div');
+            div.style.padding = '15px 20px'; div.style.borderBottom = '1px solid #111'; div.innerText = id;
+            div.onclick = () => this.openChat(id); list.appendChild(div);
+        });
+    },
+    openChat(id) { this.currentChat = id; document.getElementById('chat-name').innerText = id; this.renderMessages(); this.openView('view-chat'); },
+    renderMessages() {
+        const area = document.getElementById('messages'); area.innerHTML = '';
+        (this.db[this.uid].friends[this.currentChat].history || []).forEach(m => {
+            const d = document.createElement('div'); d.className = `bubble ${m.sender === this.uid ? 'sent' : 'received'}`;
+            d.innerText = m.text; area.appendChild(d);
+        });
+        area.scrollTop = area.scrollHeight;
+    },
+    saveDb() { localStorage.setItem('crimson_db', JSON.stringify(this.db)); },
+    updateHeader() { const me = this.db[this.uid]; document.getElementById('header-name').innerText = me.name; },
+    addContact() { const id = document.getElementById('target-id').value.trim(); if(id) { this.pushMsg(id, 'system', 'Conectado'); this.renderHome(); this.closeView('view-add'); } },
     openView(id) { document.getElementById(id).classList.add('active'); },
-    closeView(id) { document.getElementById(id).classList.remove('active'); }
+    closeView(id) { document.getElementById(id).classList.remove('active'); },
+    closeChat() { this.currentChat = null; this.closeView('view-chat'); },
+    logout() { localStorage.removeItem('crimson_session'); location.reload(); }
 };
 
 sys.init();
