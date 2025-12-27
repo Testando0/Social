@@ -3,342 +3,688 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crimson OS | Professional Suite</title>
+    <title>Crimson Protocol | Neural Link</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     
     <style>
         :root {
-            --brand: #dc2626;
-            --brand-dark: #991b1b;
-            --bg: #09090b;
-            --surface: #18181b;
-            --panel: #27272a;
-            --border: rgba(255, 255, 255, 0.06);
-            --text: #fafafa;
-            --text-muted: #a1a1aa;
+            --primary: #ff0f0f; /* Vermelho Neon */
+            --primary-dim: #450a0a;
+            --primary-glow: rgba(255, 15, 15, 0.4);
+            
+            --bg-deep: #030303;
+            --bg-surface: #0a0a0a;
+            --bg-glass: rgba(10, 10, 10, 0.7);
+            
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            
+            --border: 1px solid rgba(255, 255, 255, 0.08);
+            --radius-lg: 16px;
+            --radius-sm: 8px;
+            
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); height: 100dvh; display: flex; overflow: hidden; }
-
-        /* --- NAVEGAÇÃO --- */
-        .screen { position: absolute; inset: 0; display: none; flex-direction: column; background: var(--bg); z-index: 10; }
-        .active { display: flex; }
-
-        /* --- DESIGN PROFISSIONAL (LISTA DE CHATS) --- */
-        header { 
-            height: 70px; padding: 0 24px; background: var(--surface); 
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-        .header-user { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .avatar { 
-            width: 44px; height: 44px; border-radius: 12px; background: var(--panel);
-            display: flex; align-items: center; justify-content: center; font-weight: 600;
-            border: 1px solid var(--border); object-fit: cover;
-        }
-
-        .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { 
-            padding: 16px 24px; display: flex; align-items: center; gap: 16px; 
-            cursor: pointer; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02);
-        }
-        .chat-item:hover { background: rgba(255,255,255,0.03); }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        .chat-content { flex: 1; min-width: 0; }
-        .chat-row-1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .chat-name { font-size: 15px; font-weight: 600; }
-        .chat-time { font-size: 12px; color: var(--text-muted); }
-        .chat-row-2 { display: flex; justify-content: space-between; align-items: center; }
-        .chat-msg { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* NOTIFICAÇÃO ESTILO TELEGRAM */
-        .badge { 
-            background: var(--brand); color: white; font-size: 11px; font-weight: 700;
-            height: 20px; min-width: 20px; border-radius: 10px; 
-            display: flex; align-items: center; justify-content: center; padding: 0 6px;
+        body { 
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            height: 100dvh;
+            display: flex;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% -20%, #220505 0%, var(--bg-deep) 60%);
         }
 
-        /* --- INTERFACE DE CHAT --- */
-        #chat-flow { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 6px; }
-        .bubble { 
-            max-width: 70%; padding: 10px 14px; border-radius: 14px; font-size: 14px; 
-            line-height: 1.5; position: relative;
-        }
-        .sent { align-self: flex-end; background: var(--brand); border-bottom-right-radius: 2px; }
-        .received { align-self: flex-start; background: var(--panel); border-bottom-left-radius: 2px; }
-        .meta { display: flex; justify-content: flex-end; gap: 4px; font-size: 10px; margin-top: 4px; color: rgba(255,255,255,0.6); }
-        .ticks { font-weight: bold; }
-        .read-ticks { color: #4ade80; } /* Verde para leitura confirmada */
+        /* --- UI UTILS & SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
 
-        /* --- INPUT --- */
-        .input-area { padding: 16px 24px; background: var(--surface); display: flex; gap: 12px; align-items: center; }
-        .text-field { 
-            flex: 1; background: var(--panel); border: 1px solid var(--border); 
-            padding: 12px 16px; border-radius: 10px; color: white; outline: none;
-        }
-        .text-field:focus { border-color: var(--brand); }
+        .btn-icon { background: none; border: none; color: var(--text-main); font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.2s; }
+        .btn-icon:hover { background: rgba(255,255,255,0.1); color: var(--primary); }
 
-        /* --- FAB --- */
-        .btn-main { 
-            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; 
-            background: var(--brand); border: none; border-radius: 18px; color: white;
-            font-size: 24px; cursor: pointer; box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
-            z-index: 100;
+        /* --- TELAS --- */
+        .screen { 
+            position: absolute; inset: 0; 
+            background: var(--bg-deep); 
+            display: flex; flex-direction: column; 
+            z-index: 10; 
+            opacity: 0; pointer-events: none; transform: scale(0.98);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .screen.active { 
+            opacity: 1; pointer-events: all; transform: scale(1); z-index: 20; 
         }
 
-        /* --- AUTH --- */
-        #auth-screen { z-index: 1000; align-items: center; justify-content: center; background: var(--bg); }
-        .auth-card { width: 100%; max-width: 360px; text-align: center; }
-        .auth-logo { width: 70px; height: 70px; background: var(--brand); border-radius: 20px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 30px; }
+        /* --- HEADER GLASS --- */
+        header {
+            height: 64px; padding: 0 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: var(--border);
+            z-index: 50;
+        }
+        .header-title { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px; }
+
+        /* --- AUTH SCREEN --- */
+        #auth-screen { 
+            align-items: center; justify-content: center; z-index: 1000; 
+            background: radial-gradient(circle at center, #1a0505 0%, #000 100%);
+        }
+        .auth-container { 
+            width: 100%; max-width: 340px; text-align: center; padding: 20px;
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .logo-box {
+            width: 80px; height: 80px; margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--primary), #990000);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; font-weight: 800; font-family: var(--font-display);
+            box-shadow: 0 0 30px var(--primary-glow);
+            position: relative;
+        }
+        .logo-box::after { content:''; position: absolute; inset: -2px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.3); opacity: 0.5; }
+
+        .input-glow {
+            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 14px; border-radius: 12px; outline: none; text-align: center;
+            font-size: 16px; margin-bottom: 16px; transition: 0.3s;
+        }
+        .input-glow:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(255, 15, 15, 0.1); }
+        
+        .btn-glow {
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            background: var(--text-main); color: black; font-weight: 700; cursor: pointer;
+            font-family: var(--font-display); text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .btn-glow:active { transform: scale(0.96); }
+
+        /* --- LISTA DE CHATS --- */
+        .chat-list { flex: 1; overflow-y: auto; padding-top: 8px; }
+        .chat-item {
+            padding: 12px 20px; display: flex; align-items: center; gap: 14px;
+            cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;
+        }
+        .chat-item:active { background: rgba(255,255,255,0.05); }
+        .chat-item::after {
+            content: ''; position: absolute; bottom: 0; left: 74px; right: 0;
+            height: 1px; background: rgba(255,255,255,0.04);
+        }
+
+        .avatar {
+            width: 50px; height: 50px; border-radius: 14px; background: #222;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-family: var(--font-display); color: #fff;
+            position: relative; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .chat-info { flex: 1; min-width: 0; }
+        .row-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .name { font-weight: 600; font-size: 15px; }
+        .time { font-size: 12px; color: var(--text-muted); font-family: var(--font-display); }
+        
+        .row-btm { display: flex; justify-content: space-between; align-items: center; }
+        .last-msg { color: var(--text-muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
+        
+        .badge {
+            background: var(--primary); color: white; font-size: 11px; font-weight: 700;
+            padding: 2px 8px; border-radius: 20px; box-shadow: 0 2px 10px var(--primary-glow);
+            min-width: 20px; text-align: center;
+        }
+
+        /* --- TELA DO CHAT --- */
+        #chat-flow {
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 4px;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 40px 40px; /* Grid cyberpunk sutil */
+        }
+        
+        .bubble {
+            max-width: 75%; padding: 10px 16px; border-radius: 18px;
+            font-size: 15px; line-height: 1.4; position: relative;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .received { 
+            background: #1a1a1a; align-self: flex-start; 
+            border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .sent { 
+            background: linear-gradient(135deg, var(--primary) 0%, #b91c1c 100%); 
+            align-self: flex-end; border-bottom-right-radius: 4px;
+            color: white; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+        }
+
+        .meta { 
+            display: flex; justify-content: flex-end; align-items: center; gap: 4px;
+            font-size: 10px; margin-top: 4px; opacity: 0.7; font-family: var(--font-display);
+        }
+        .checks i { font-size: 12px; }
+        .read { color: #69ffb4; } /* Verde neon para lido */
+
+        .chat-input-bar {
+            padding: 12px 16px; background: var(--bg-surface);
+            display: flex; align-items: center; gap: 10px;
+            border-top: var(--border);
+        }
+        .chat-input {
+            flex: 1; background: #1a1a1a; border: none; padding: 12px 16px;
+            border-radius: 24px; color: white; outline: none; font-family: var(--font-body);
+        }
+        .send-btn {
+            background: var(--primary); width: 42px; height: 42px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; border: none;
+            color: white; font-size: 18px; cursor: pointer; box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* --- FLOATING ACTION BUTTON (FAB) --- */
+        .fab {
+            position: fixed; bottom: 24px; right: 24px;
+            width: 56px; height: 56px; border-radius: 18px;
+            background: var(--primary); color: white; border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 10px 20px rgba(220, 38, 38, 0.4);
+            cursor: pointer; z-index: 100; transition: 0.3s;
+        }
+        .fab:hover { transform: translateY(-3px) rotate(90deg); }
+
+        /* --- WELCOME TOAST (NOTIFICAÇÃO) --- */
+        #system-toast {
+            position: fixed; top: -80px; left: 50%; transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.9); backdrop-filter: blur(10px);
+            padding: 12px 24px; border-radius: 30px;
+            display: flex; align-items: center; gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 2000; transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 90%; max-width: 350px;
+        }
+        #system-toast.visible { top: 20px; }
+        .toast-icon { 
+            width: 32px; height: 32px; background: var(--primary); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; color: white;
+        }
 
         .hidden { display: none !important; }
+
+        /* Contatos Modal */
+        .modal-body { padding: 20px; }
+        .contact-row { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; }
     </style>
 </head>
 <body>
 
+    <div id="system-toast">
+        <div class="toast-icon"><i class="ri-notification-3-fill"></i></div>
+        <div style="flex:1;">
+            <div style="font-weight:700; font-size:13px; color:var(--primary);">SISTEMA ONLINE</div>
+            <div id="toast-msg" style="font-size:13px; color:white;">Bem-vindo de volta, Agente.</div>
+        </div>
+        <div style="font-size:18px; color:#555; cursor:pointer;" onclick="hideToast()">&times;</div>
+    </div>
+
     <div id="auth-screen" class="screen active">
-        <div class="auth-card">
-            <div class="auth-logo">C</div>
-            <h2 style="margin-bottom: 30px;">Crimson Protocol</h2>
-            <input type="text" id="login-id" class="text-field" placeholder="Digite seu nickname" style="text-align: center; margin-bottom: 12px; width: 100%;">
-            <button onclick="boot()" class="text-field" style="background: white; color: black; font-weight: 600; border: none; width: 100%; cursor: pointer;">Entrar</button>
+        <div class="auth-container">
+            <div class="logo-box">C</div>
+            <h2 style="font-family: var(--font-display); margin-bottom: 8px;">CRIMSON OS</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 30px;">Secure Neural Messaging Protocol</p>
+            
+            <input type="text" id="login-id" class="input-glow" placeholder="IDENTITY / NICKNAME" autocomplete="off">
+            <button onclick="bootSystem()" class="btn-glow">INICIAR SESSÃO</button>
         </div>
     </div>
 
     <div id="home-screen" class="screen">
         <header>
-            <div class="header-user" onclick="openProfile()">
-                <div id="my-avatar-top" class="avatar"></div>
-                <span style="font-weight: 600;">Conversas</span>
+            <div class="header-title" style="display:flex; align-items:center; gap:10px;">
+                <div id="my-avatar-mini" class="avatar" style="width:32px; height:32px; border-radius:8px; font-size:14px;"></div>
+                <span>Mensagens</span>
             </div>
-            <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted);">Sincronizar</button>
+            <div>
+                <button class="btn-icon" onclick="openProfile()"><i class="ri-settings-4-line"></i></button>
+                <button class="btn-icon" onclick="location.reload()"><i class="ri-refresh-line"></i></button>
+            </div>
         </header>
-        <div id="chats-list" class="chat-list"></div>
-        <button class="btn-main" onclick="showContacts()">＋</button>
-    </div>
-
-    <div id="contacts-screen" class="screen">
-        <header>
-            <button onclick="closeContacts()" style="background:none; border:none; color:var(--brand); font-weight: 600;">Fechar</button>
-            <span class="header-title">Novo Contato</span>
-            <div style="width: 50px;"></div>
-        </header>
-        <div style="padding: 20px;">
-            <input type="text" id="target-id" class="text-field" placeholder="Nickname do contato" style="width: 100%;">
-            <button onclick="addContact()" class="text-field" style="margin-top: 12px; width: 100%; background: var(--brand); border: none; font-weight: 600;">Adicionar na Agenda</button>
-        </div>
-        <div id="contacts-list" class="chat-list"></div>
+        
+        <div id="chats-list" class="chat-list">
+            </div>
+        
+        <button class="fab" onclick="showContacts()"><i class="ri-add-line"></i></button>
     </div>
 
     <div id="chat-screen" class="screen">
         <header>
-            <button onclick="closeChat()" style="background:none; border:none; color:var(--brand); font-weight: 600;">Voltar</button>
-            <div style="text-align: center;">
-                <div id="active-nick" style="font-weight: 600; font-size: 15px;">Nome</div>
-                <div id="active-status" style="font-size: 11px; color: var(--brand);">Online</div>
+            <button class="btn-icon" onclick="closeChat()"><i class="ri-arrow-left-s-line"></i></button>
+            <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+                <span id="active-nick" style="font-weight: 700; font-family: var(--font-display);">Usuário</span>
+                <span id="active-status" style="font-size: 10px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">Conectando...</span>
             </div>
-            <div id="active-avatar-top" class="avatar" style="width:36px; height:36px;"></div>
+            <div id="active-avatar-top" class="avatar" style="width:36px; height:36px; border-radius:10px;"></div>
         </header>
+
         <div id="chat-flow"></div>
-        <div class="input-area">
-            <input type="text" id="chat-msg" class="text-field" placeholder="Mensagem..." onkeydown="if(event.key==='Enter') sendMsg()">
-            <button onclick="sendMsg()" style="background:none; border:none; color:var(--brand); font-weight: 700;">Enviar</button>
+
+        <div class="chat-input-bar">
+            <input type="text" id="chat-msg" class="chat-input" placeholder="Digite uma mensagem..." onkeydown="if(event.key==='Enter') sendMsg()">
+            <button class="send-btn" onclick="sendMsg()"><i class="ri-send-plane-fill"></i></button>
+        </div>
+    </div>
+
+    <div id="contacts-screen" class="screen">
+        <header>
+            <button class="btn-icon" onclick="closeContacts()"><i class="ri-close-line"></i></button>
+            <span class="header-title">Diretório</span>
+            <div style="width:40px;"></div>
+        </header>
+        <div class="modal-body">
+            <div style="position:relative; margin-bottom: 20px;">
+                <input type="text" id="target-id" class="input-glow" placeholder="Buscar ID do Usuário" style="margin:0; padding-right: 50px;">
+                <button onclick="addContact()" style="position: absolute; right: 5px; top: 5px; height: 38px; width: 38px; background: var(--primary); border: none; border-radius: 8px; color: white; cursor: pointer;"><i class="ri-user-add-line"></i></button>
+            </div>
+            <h4 style="color: var(--text-muted); margin-bottom: 10px; font-size: 12px; text-transform: uppercase;">Meus Contatos</h4>
+            <div id="contacts-list"></div>
         </div>
     </div>
 
     <div id="profile-screen" class="screen">
         <header>
-            <button onclick="closeProfile()" style="background:none; border:none; color:var(--brand); font-weight: 600;">Voltar</button>
-            <span class="header-title">Configurar Perfil</span>
-            <div style="width: 50px;"></div>
+            <button class="btn-icon" onclick="closeProfile()"><i class="ri-arrow-left-line"></i></button>
+            <span class="header-title">Configuração</span>
+            <div style="width:40px;"></div>
         </header>
-        <div style="padding: 40px; text-align: center;">
-            <div id="p-preview" class="avatar" style="width:100px; height:100px; margin: 0 auto 20px; font-size: 30px;"></div>
-            <input type="text" id="p-img" class="text-field" placeholder="URL da Foto de Perfil" style="margin-bottom: 12px; width: 100%;">
-            <input type="text" id="p-recado" class="text-field" placeholder="Seu status/recado" style="margin-bottom: 24px; width: 100%;">
-            <button onclick="saveProfile()" class="text-field" style="background: var(--brand); border: none; font-weight: 600; width: 100%;">Salvar</button>
-            <button onclick="localStorage.clear(); location.reload();" style="margin-top: 40px; background: none; border: none; color: var(--brand); font-size: 13px;">Encerrar Sessão</button>
+        <div style="padding: 40px 20px; text-align: center;">
+            <div id="p-preview" class="avatar" style="width:100px; height:100px; margin: 0 auto 20px; font-size: 40px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
+            
+            <label style="display:block; text-align:left; font-size:12px; color:var(--primary); margin-bottom:5px; font-weight:700;">URL DA IMAGEM</label>
+            <input type="text" id="p-img" class="input-glow" placeholder="https://...">
+            
+            <label style="display:block; text-align:left; font-size:12px; color:var(--primary); margin-bottom:5px; font-weight:700;">STATUS DO SISTEMA</label>
+            <input type="text" id="p-recado" class="input-glow" placeholder="Frase de efeito...">
+            
+            <button onclick="saveProfile()" class="btn-glow" style="background: var(--primary); color: white; margin-top: 10px;">SALVAR DADOS</button>
+            
+            <button onclick="logout()" style="margin-top: 40px; background: none; border: 1px solid #333; padding: 10px 20px; color: #666; border-radius: 8px; cursor: pointer; font-size: 12px;">ENCERRAR PROTOCOLO</button>
         </div>
     </div>
 
     <script>
+        // CONFIGURAÇÃO DO BANCO DE DADOS LOCAL
         let peer, myId, activePeer = null, conns = {};
+        const DB_KEYS = { PROF: 'cr_prof', CONT: 'cr_cont', HIST: 'cr_hist', UNRD: 'cr_unrd', UID: 'cr_uid' };
+
         let db = {
-            profile: JSON.parse(localStorage.getItem('c_prof') || '{"img":"","status":"No Crimson"}'),
-            contacts: JSON.parse(localStorage.getItem('c_cont') || '[]'),
-            history: JSON.parse(localStorage.getItem('c_hist') || '{}'),
-            unread: JSON.parse(localStorage.getItem('c_unrd') || '{}')
+            profile: JSON.parse(localStorage.getItem(DB_KEYS.PROF) || '{"img":"","status":""}'),
+            contacts: JSON.parse(localStorage.getItem(DB_KEYS.CONT) || '[]'),
+            history: JSON.parse(localStorage.getItem(DB_KEYS.HIST) || '{}'),
+            unread: JSON.parse(localStorage.getItem(DB_KEYS.UNRD) || '{}')
         };
 
-        function boot() {
-            const id = document.getElementById('login-id').value.trim().toLowerCase();
-            if(!id) return;
-            localStorage.setItem('c_uid', id);
+        // --- INICIALIZAÇÃO E UI ---
+        function bootSystem() {
+            const idInput = document.getElementById('login-id');
+            const id = idInput.value.trim().toLowerCase().replace(/\s+/g, '');
+            if(!id) {
+                idInput.style.borderColor = 'var(--primary)';
+                setTimeout(()=> idInput.style.borderColor = 'rgba(255,255,255,0.1)', 1000);
+                return;
+            }
+            localStorage.setItem(DB_KEYS.UID, id);
             location.reload();
         }
 
         window.onload = () => {
-            myId = localStorage.getItem('c_uid');
+            myId = localStorage.getItem(DB_KEYS.UID);
             if(myId) {
                 document.getElementById('auth-screen').classList.remove('active');
                 document.getElementById('home-screen').classList.add('active');
                 initPeer();
                 updateProfileUI();
+                
+                // NOTIFICAÇÃO DE BOAS VINDAS (FEATURE PEDIDA)
+                checkUnreadMessages();
             }
         };
 
+        function logout() {
+            if(confirm('Desconectar do servidor neural?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- SISTEMA DE NOTIFICAÇÃO ---
+        function checkUnreadMessages() {
+            let totalUnread = 0;
+            Object.values(db.unread).forEach(count => totalUnread += count);
+            
+            const toast = document.getElementById('system-toast');
+            const msg = document.getElementById('toast-msg');
+            
+            if (totalUnread > 0) {
+                msg.innerHTML = `Você tem <b style="color:#fff">${totalUnread}</b> novas mensagens criptografadas.`;
+                setTimeout(() => toast.classList.add('visible'), 1000); // Delay dramático
+            } else {
+                msg.innerText = "Nenhuma nova mensagem. Sistema limpo.";
+                // Opcional: mostrar mesmo sem mensagens para efeito visual
+                // setTimeout(() => toast.classList.add('visible'), 1000); 
+            }
+
+            // Auto-hide após 5 segundos
+            setTimeout(hideToast, 6000);
+        }
+
+        function hideToast() {
+            document.getElementById('system-toast').classList.remove('visible');
+        }
+
+        // --- REDE P2P (PEERJS) ---
         function initPeer() {
             peer = new Peer(myId);
+            
             peer.on('open', () => {
+                console.log('Connected to Neural Net:', myId);
                 renderHome();
+                // Reconectar aos contatos conhecidos para status
                 db.contacts.forEach(id => connectTo(id));
             });
+
             peer.on('connection', conn => setupConn(conn));
+            peer.on('error', err => console.log('Network Error:', err));
+        }
+
+        function connectTo(id) {
+            if(!conns[id] && id !== myId) {
+                let conn = peer.connect(id);
+                setupConn(conn);
+            }
         }
 
         function setupConn(conn) {
             conns[conn.peer] = conn;
+            
             conn.on('open', () => {
-                if(activePeer === conn.peer) document.getElementById('active-status').innerText = "Online";
-                // Enviar pendentes
-                (db.history[conn.peer] || []).filter(m => m.from === myId && !m.read).forEach(m => conn.send(m));
+                if(activePeer === conn.peer) updateStatus("ONLINE");
+                // Enviar mensagens pendentes (queue)
+                const pending = (db.history[conn.peer] || []).filter(m => m.from === myId && !m.sent);
+                pending.forEach(m => { conn.send(m); m.sent = true; });
+                save();
             });
+
             conn.on('data', data => {
                 if(data.type === 'msg') {
                     handleIncoming(conn.peer, data);
-                    conn.send({type: 'ack', id: data.id});
-                } else if(data.type === 'ack') {
-                    const m = db.history[conn.peer]?.find(x => x.id === data.id);
-                    if(m) { m.read = true; save(); if(activePeer === conn.peer) renderChat(); }
+                    // Envia confirmação de leitura se chat estiver aberto
+                    if(activePeer === conn.peer) {
+                        conn.send({type: 'read_ack', msgId: data.id});
+                    }
+                } else if(data.type === 'read_ack') {
+                    markAsReadRemote(conn.peer, data.msgId);
                 }
+            });
+
+            conn.on('close', () => {
+                if(activePeer === conn.peer) updateStatus("OFFLINE");
+                delete conns[conn.peer];
             });
         }
 
-        function connectTo(id) { if(!conns[id]) setupConn(peer.connect(id)); }
-
         function handleIncoming(from, msg) {
             if(!db.history[from]) db.history[from] = [];
-            if(!db.history[from].find(m => m.id === msg.id)) {
-                db.history[from].push({...msg, read: true});
-                if(activePeer !== from) {
-                    db.unread[from] = (db.unread[from] || 0) + 1;
-                }
-                save();
-                renderHome();
-                if(activePeer === from) renderChat();
+            
+            // Evita duplicatas
+            if(db.history[from].find(m => m.id === msg.id)) return;
+
+            const newMsg = { ...msg, from: from, read: (activePeer === from) };
+            db.history[from].push(newMsg);
+
+            if(activePeer !== from) {
+                db.unread[from] = (db.unread[from] || 0) + 1;
+                // Toast instantâneo se estiver no app
+                const toast = document.getElementById('system-toast');
+                document.getElementById('toast-msg').innerHTML = `Nova mensagem de <b>${from}</b>`;
+                toast.classList.add('visible');
+                setTimeout(hideToast, 4000);
+            } else {
+                renderChat();
+                scrollToBottom();
+            }
+            
+            save();
+            renderHome();
+        }
+
+        function markAsReadRemote(peerId, msgId) {
+            const chat = db.history[peerId];
+            if(chat) {
+                const m = chat.find(x => x.id === msgId);
+                if(m) { m.read = true; save(); if(activePeer === peerId) renderChat(); }
             }
         }
 
+        // --- MENSAGENS ---
         function sendMsg() {
             const input = document.getElementById('chat-msg');
-            if(!input.value || !activePeer) return;
-            const msg = {
-                id: Date.now(), from: myId, text: input.value, type: 'msg',
-                time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), read: false
+            const txt = input.value.trim();
+            if(!txt || !activePeer) return;
+
+            const msgData = {
+                id: Date.now(),
+                text: txt,
+                type: 'msg',
+                time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                sent: false, // Flag de enviado pra rede
+                read: false
             };
+
             if(!db.history[activePeer]) db.history[activePeer] = [];
-            db.history[activePeer].push(msg);
-            if(conns[activePeer]?.open) conns[activePeer].send(msg); else connectTo(activePeer);
-            input.value = ""; save(); renderChat(); renderHome();
+            db.history[activePeer].push({...msgData, from: myId, sent: true}); // Assume enviado localmente
+
+            if(conns[activePeer] && conns[activePeer].open) {
+                conns[activePeer].send(msgData);
+            } else {
+                connectTo(activePeer); // Tenta reconectar para enviar depois
+            }
+
+            input.value = "";
+            save();
+            renderChat();
+            renderHome();
+            scrollToBottom();
         }
 
+        // --- RENDERIZAÇÃO ---
         function renderHome() {
             const list = document.getElementById('chats-list');
             list.innerHTML = "";
-            const sorted = Object.keys(db.history).sort((a,b) => (db.history[b].slice(-1)[0]?.id || 0) - (db.history[a].slice(-1)[0]?.id || 0));
+            
+            // Ordena por mensagem mais recente
+            const chats = Object.keys(db.history).sort((a,b) => {
+                const lastA = db.history[a].slice(-1)[0]?.id || 0;
+                const lastB = db.history[b].slice(-1)[0]?.id || 0;
+                return lastB - lastA;
+            });
 
-            sorted.forEach(id => {
+            if(chats.length === 0) {
+                list.innerHTML = `<div style="text-align:center; margin-top:50px; color:var(--text-muted); font-size:13px;">Nenhuma transmissão recente.</div>`;
+                return;
+            }
+
+            chats.forEach(id => {
                 const last = db.history[id].slice(-1)[0];
-                const count = db.unread[id] || 0;
+                const unreadCount = db.unread[id] || 0;
+                
+                // Simples avatar gerador de cor baseado no ID
+                const initial = id[0].toUpperCase();
+                
                 list.innerHTML += `
                     <div class="chat-item" onclick="openChat('${id}')">
-                        <div class="avatar">${id[0].toUpperCase()}</div>
-                        <div class="chat-content">
-                            <div class="chat-row-1"><span class="chat-name">${id}</span><span class="chat-time">${last?.time || ''}</span></div>
-                            <div class="chat-row-2">
-                                <span class="chat-msg">${last?.text || 'Mídia'}</span>
-                                ${count > 0 ? `<div class="badge">${count}</div>` : ''}
+                        <div class="avatar">${initial}</div>
+                        <div class="chat-info">
+                            <div class="row-top">
+                                <span class="name">${id}</span>
+                                <span class="time">${last?.time || ''}</span>
+                            </div>
+                            <div class="row-btm">
+                                <span class="last-msg" style="${unreadCount > 0 ? 'color:white; font-weight:600' : ''}">
+                                    ${last.from === myId ? '<i class="ri-check-double-line" style="font-size:12px; margin-right:4px;"></i>' : ''} 
+                                    ${last?.text || 'Mídia'}
+                                </span>
+                                ${unreadCount > 0 ? `<div class="badge">${unreadCount}</div>` : ''}
                             </div>
                         </div>
                     </div>`;
             });
         }
 
-        function openChat(id) {
-            activePeer = id;
-            db.unread[id] = 0;
-            save();
-            document.getElementById('active-nick').innerText = id;
-            document.getElementById('active-avatar-top').innerText = id[0].toUpperCase();
-            document.getElementById('active-status').innerText = conns[id]?.open ? "Online" : "Offline";
-            document.getElementById('chat-screen').classList.add('active');
-            renderChat();
-            renderHome();
-            connectTo(id);
-        }
-
         function renderChat() {
             const flow = document.getElementById('chat-flow');
             flow.innerHTML = "";
-            (db.history[activePeer] || []).forEach(m => {
+            const msgs = db.history[activePeer] || [];
+            
+            let lastDate = null;
+
+            msgs.forEach(m => {
                 const isMe = m.from === myId;
+                
                 flow.innerHTML += `
                     <div class="bubble ${isMe ? 'sent' : 'received'}">
                         ${m.text}
-                        <div class="meta">${m.time} ${isMe ? `<span class="ticks ${m.read?'read-ticks':''}">${m.read?'✓✓':'✓'}</span>`:''}</div>
+                        <div class="meta">
+                            ${m.time} 
+                            ${isMe ? `<span class="checks ${m.read ? 'read' : ''}"><i class="ri-check-double-line"></i></span>` : ''}
+                        </div>
                     </div>`;
             });
+        }
+
+        function scrollToBottom() {
+            const flow = document.getElementById('chat-flow');
             flow.scrollTop = flow.scrollHeight;
         }
 
-        // NAVIGATION
-        function showContacts() { document.getElementById('contacts-screen').classList.add('active'); renderContacts(); }
-        function closeContacts() { document.getElementById('contacts-screen').classList.remove('active'); }
-        function closeChat() { document.getElementById('chat-screen').classList.remove('active'); activePeer = null; }
-        function openProfile() { 
-            document.getElementById('p-img').value = db.profile.img;
-            document.getElementById('p-recado').value = db.profile.status;
-            document.getElementById('profile-screen').classList.add('active'); 
-        }
-        function closeProfile() { document.getElementById('profile-screen').classList.remove('active'); }
+        // --- NAVEGAÇÃO ---
+        function openChat(id) {
+            activePeer = id;
+            
+            // Zera contadores
+            if(db.unread[id]) {
+                delete db.unread[id];
+                save();
+                renderHome(); // Atualiza home para remover badge
+            }
 
+            // Envia Read Receipt para todas as pendentes
+            if(conns[id] && conns[id].open) {
+                (db.history[id]||[]).forEach(m => {
+                    if(m.from !== myId && !m.read) {
+                        conns[id].send({type: 'read_ack', msgId: m.id});
+                        m.read = true; // Marca local como lido
+                    }
+                });
+                save();
+            }
+
+            // UI Setup
+            document.getElementById('active-nick').innerText = id;
+            document.getElementById('active-avatar-top').innerText = id[0].toUpperCase();
+            
+            // Check status real
+            updateStatus(conns[id]?.open ? "ONLINE" : "OFFLINE");
+            
+            switchScreen('chat-screen');
+            renderChat();
+            scrollToBottom();
+            
+            if(!conns[id]) connectTo(id);
+        }
+
+        function updateStatus(status) {
+            const el = document.getElementById('active-status');
+            el.innerText = status;
+            el.style.color = status === "ONLINE" ? "#69ffb4" : "var(--text-muted)";
+        }
+
+        function closeChat() {
+            activePeer = null;
+            switchScreen('home-screen');
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // --- MODAIS DE CONTATO E PERFIL ---
+        function showContacts() {
+            switchScreen('contacts-screen');
+            const list = document.getElementById('contacts-list');
+            list.innerHTML = "";
+            db.contacts.forEach(c => {
+                 list.innerHTML += `
+                 <div class="contact-row" onclick="openChat('${c}')">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="avatar" style="width:36px; height:36px; font-size:14px;">${c[0].toUpperCase()}</div>
+                        <span style="font-weight:600;">${c}</span>
+                    </div>
+                    <i class="ri-message-3-line" style="color:var(--text-muted)"></i>
+                 </div>`;
+            });
+        }
+        function closeContacts() { switchScreen('home-screen'); }
+        
         function addContact() {
             const id = document.getElementById('target-id').value.trim().toLowerCase();
             if(id && id !== myId && !db.contacts.includes(id)) {
                 db.contacts.push(id);
-                if(!db.history[id]) db.history[id] = [];
-                save(); renderContacts(); closeContacts(); openChat(id);
+                save();
+                openChat(id);
             }
         }
 
-        function renderContacts() {
-            const list = document.getElementById('contacts-list');
-            list.innerHTML = "";
-            db.contacts.forEach(id => {
-                list.innerHTML += `<div class="chat-item" onclick="openChat('${id}'); closeContacts();"><div class="avatar">${id[0].toUpperCase()}</div><div class="chat-name">${id}</div></div>`;
-            });
+        function openProfile() {
+            document.getElementById('p-img').value = db.profile.img;
+            document.getElementById('p-recado').value = db.profile.status;
+            switchScreen('profile-screen');
         }
-
+        function closeProfile() { switchScreen('home-screen'); }
+        
         function saveProfile() {
             db.profile.img = document.getElementById('p-img').value;
             db.profile.status = document.getElementById('p-recado').value;
-            save(); updateProfileUI(); closeProfile();
+            save(); updateProfileUI();
+            alert('Perfil atualizado no servidor.');
         }
 
         function updateProfileUI() {
-            const avHTML = db.profile.img ? `<img src="${db.profile.img}" style="width:100%;height:100%;border-radius:12px;">` : myId[0].toUpperCase();
-            document.getElementById('my-avatar-top').innerHTML = avHTML;
-            document.getElementById('p-preview').innerHTML = avHTML;
+            const img = db.profile.img;
+            const content = img ? `<img src="${img}">` : myId[0].toUpperCase();
+            document.getElementById('my-avatar-mini').innerHTML = content;
+            document.getElementById('p-preview').innerHTML = content;
         }
 
         function save() {
-            localStorage.setItem('c_cont', JSON.stringify(db.contacts));
-            localStorage.setItem('c_hist', JSON.stringify(db.history));
-            localStorage.setItem('c_prof', JSON.stringify(db.profile));
-            localStorage.setItem('c_unrd', JSON.stringify(db.unread));
+            localStorage.setItem(DB_KEYS.CONT, JSON.stringify(db.contacts));
+            localStorage.setItem(DB_KEYS.HIST, JSON.stringify(db.history));
+            localStorage.setItem(DB_KEYS.PROF, JSON.stringify(db.profile));
+            localStorage.setItem(DB_KEYS.UNRD, JSON.stringify(db.unread));
         }
     </script>
 </body>
