@@ -3,315 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crimson Work | Enterprise Messaging</title>
+    <title>CRIMSON | ULTRA-BLACK</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-main: #ffffff;
-            --bg-side: #f8f9fa;
-            --accent: #c21807; /* Vermelho Profissional Carmesim */
-            --accent-soft: #fdf2f2;
-            --text-dark: #1a1a1a;
-            --text-gray: #64748b;
-            --border: #e2e8f0;
-            --shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        /* Dark Mode opcional - mas faremos o Clean Profissional primeiro */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-main: #0f172a;
-                --bg-side: #1e293b;
-                --text-dark: #f1f5f9;
-                --text-gray: #94a3b8;
-                --border: #334155;
-                --accent-soft: rgba(194, 24, 7, 0.1);
-            }
+            --primary: #ff0000;
+            --primary-dark: #8b0000;
+            --bg-pure: #000000;
+            --bg-card: #121212;
+            --bg-input: #1a1a1a;
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --border: 1px solid #222;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        body { background: #f1f5f9; color: var(--text-dark); height: 100dvh; display: flex; justify-content: center; }
+        body { background: #000; color: var(--text-main); height: 100dvh; display: flex; justify-content: center; overflow: hidden; }
 
         #app {
-            width: 100%; max-width: 1000px; height: 100dvh;
-            background: var(--bg-main); display: flex; position: relative;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            width: 100%; max-width: 500px; height: 100%;
+            background: var(--bg-pure); position: relative;
+            display: flex; flex-direction: column;
         }
 
         /* --- LOGIN --- */
         .auth-screen {
-            position: fixed; inset: 0; z-index: 2000; background: var(--bg-main);
-            display: flex; align-items: center; justify-content: center; padding: 20px;
-            transition: opacity 0.4s ease;
+            position: absolute; inset: 0; z-index: 5000; background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;
         }
-        .auth-card { width: 100%; max-width: 360px; text-align: center; }
-        .auth-logo { width: 64px; height: 64px; background: var(--accent); border-radius: 16px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; }
+        .auth-logo { font-size: 60px; color: var(--primary); margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,0,0,0.5); }
+        .auth-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 12px; color: #fff; font-weight: 800; cursor: pointer; margin-top: 15px; }
 
-        /* --- SIDEBAR (CONVERSAS) --- */
-        .sidebar {
-            width: 340px; border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; background: var(--bg-side);
+        /* --- HEADER --- */
+        header {
+            padding: 15px 20px; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: var(--border); z-index: 100;
         }
-
-        .side-header { padding: 20px; border-bottom: 1px solid var(--border); }
-        .me-badge { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .h-user { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .avatar {
-            width: 44px; height: 44px; border-radius: 12px; background: var(--border);
+            width: 42px; height: 42px; border-radius: 50%; background: var(--bg-card);
             display: flex; align-items: center; justify-content: center; font-weight: 700;
-            color: var(--accent); overflow: hidden; position: relative; flex-shrink: 0;
+            border: 2px solid var(--primary); color: var(--primary); overflow: hidden;
         }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .online-status { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; position: absolute; bottom: -2px; right: -2px; border: 2px solid var(--bg-side); }
 
-        .search-box {
-            background: var(--bg-main); border: 1px solid var(--border);
-            border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px;
-        }
-        .search-box input { border: none; background: transparent; color: var(--text-dark); outline: none; width: 100%; font-size: 14px; }
-
+        /* --- LISTA DE CHATS --- */
         .chat-list { flex: 1; overflow-y: auto; }
         .chat-item {
-            padding: 16px 20px; display: flex; gap: 14px; cursor: pointer;
-            transition: 0.2s; border-bottom: 1px solid transparent;
+            padding: 16px 20px; display: flex; gap: 15px; border-bottom: 1px solid #111;
+            transition: 0.2s; cursor: pointer; align-items: center;
         }
-        .chat-item:hover { background: var(--bg-main); }
-        .chat-item.active { background: var(--accent-soft); border-left: 4px solid var(--accent); }
+        .chat-item:active { background: #111; }
         .chat-info { flex: 1; min-width: 0; }
-        .chat-name-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .chat-name { font-weight: 600; font-size: 14.5px; }
-        .chat-time { font-size: 11px; color: var(--text-gray); }
-        .chat-preview { font-size: 13px; color: var(--text-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .unread-dot { width: 18px; height: 18px; background: var(--accent); color: white; font-size: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .c-row { display: flex; justify-content: space-between; align-items: center; }
+        .c-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+        .c-msg { font-size: 14px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .c-time { font-size: 11px; color: var(--text-dim); }
+        .unread-badge { background: var(--primary); color: #fff; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; margin-top: 5px; }
 
-        /* --- MAIN CONTENT (CHAT) --- */
-        .main-chat { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); }
-        .chat-header {
-            padding: 14px 24px; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between;
+        /* --- BOTÃO CONTATOS (ESTILO WHATSAPP) --- */
+        .fab {
+            position: absolute; bottom: 25px; right: 25px;
+            width: 60px; height: 60px; background: var(--primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; color: #fff; cursor: pointer; box-shadow: 0 5px 15px rgba(255,0,0,0.4);
+            z-index: 90;
         }
-        .chat-welcome { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--text-gray); }
 
-        .message-flow { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-        .msg-group { display: flex; flex-direction: column; max-width: 70%; }
-        .msg-group.me { align-self: flex-end; align-items: flex-end; }
-        .msg-group.other { align-self: flex-start; align-items: flex-start; }
-
-        .bubble {
-            padding: 12px 16px; border-radius: 12px; font-size: 14.5px; line-height: 1.5;
-            position: relative; box-shadow: var(--shadow);
+        /* --- TELA DE CHAT --- */
+        .chat-view {
+            position: absolute; inset: 0; background: #000; z-index: 200;
+            display: flex; flex-direction: column; transform: translateX(100%);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .me .bubble { background: var(--accent); color: white; border-bottom-right-radius: 2px; }
-        .other .bubble { background: var(--bg-side); color: var(--text-dark); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
-        .msg-time { font-size: 10px; color: var(--text-gray); margin-top: 5px; }
+        .chat-view.active { transform: translateX(0); }
 
-        .chat-input-area { padding: 20px 24px; display: flex; align-items: center; gap: 12px; }
-        .input-wrapper { flex: 1; background: var(--bg-side); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; display: flex; }
-        .input-wrapper input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); font-size: 14px; }
-        .action-btn { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--accent); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .msg-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .bubble { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.4; position: relative; }
+        .sent { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+        .received { align-self: flex-start; background: var(--bg-card); color: #fff; border-bottom-left-radius: 4px; border: var(--border); }
+        .b-time { font-size: 10px; opacity: 0.6; display: block; text-align: right; margin-top: 4px; }
 
-        /* --- PROFILE MODAL --- */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-            z-index: 3000; display: none; align-items: center; justify-content: center;
+        /* --- MODAL DE CONTATOS / PERFIL --- */
+        .full-modal {
+            position: absolute; inset: 0; background: #000; z-index: 1000;
+            display: none; flex-direction: column;
         }
-        .modal { width: 100%; max-width: 400px; background: var(--bg-main); border-radius: 20px; padding: 32px; position: relative; }
-        .close-btn { position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-gray); }
+        .full-modal.active { display: flex; }
+        .modal-header { padding: 20px; border-bottom: var(--border); display: flex; align-items: center; gap: 20px; }
+        .input-dark { width: 100%; padding: 15px; background: var(--bg-input); border: var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 15px; }
 
-        .field { margin-bottom: 20px; }
-        .field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-gray); margin-bottom: 8px; text-transform: uppercase; }
-        .field input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-side); color: var(--text-dark); outline: none; }
+        .contact-row { padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #111; cursor: pointer; }
 
-        @media (max-width: 768px) {
-            .sidebar { width: 100%; }
-            .main-chat { display: none; position: absolute; inset: 0; z-index: 500; }
-            .main-chat.active { display: flex; }
-        }
+        .input-bar { padding: 15px; background: #000; display: flex; gap: 12px; border-top: var(--border); }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <div id="auth-screen" class="auth-screen">
-        <div class="auth-card">
-            <div class="auth-logo"><i class="ri-command-fill"></i></div>
-            <h2 style="margin-bottom: 8px;">Workspace Login</h2>
-            <p style="color: var(--text-gray); font-size: 14px; margin-bottom: 32px;">Acesse sua rede segura de trabalho.</p>
-            <input type="text" id="login-id" class="field input" style="width:100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px;" placeholder="Seu Nickname ID">
-            <button onclick="core.login()" style="width:100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Entrar no Sistema</button>
+    <div id="screen-auth" class="auth-screen">
+        <i class="ri-fire-fill auth-logo"></i>
+        <h1 style="font-weight: 800; letter-spacing: -1px;">CRIMSON PROTOCOL</h1>
+        <p style="color: var(--text-dim); margin-bottom: 30px;">Professional Secure Messaging</p>
+        <input type="text" id="my-id" class="input-dark" placeholder="Nickname">
+        <button class="auth-btn" onclick="ctrl.login()">ENTRAR</button>
+    </div>
+
+    <header>
+        <div class="h-user" onclick="ctrl.toggleModal('modal-profile', true)">
+            <div class="avatar" id="my-avatar-top">?</div>
+            <div>
+                <div id="my-name-top" style="font-weight: 800; font-size: 15px;">User</div>
+                <div style="font-size: 10px; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Online</div>
+            </div>
+        </div>
+        <i class="ri-more-2-fill" style="font-size: 24px; color: var(--text-dim);"></i>
+    </header>
+
+    <div id="main-chat-list" class="chat-list">
+        </div>
+
+    <div class="fab" onclick="ctrl.toggleModal('modal-contacts', true)">
+        <i class="ri-message-3-line"></i>
+    </div>
+
+    <div id="chat-view" class="chat-view">
+        <header>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <i class="ri-arrow-left-line" onclick="ctrl.closeChat()" style="font-size: 24px;"></i>
+                <div class="avatar" id="active-avatar" style="width: 36px; height: 36px;"></div>
+                <div id="active-name" style="font-weight: 700;">Nome</div>
+            </div>
+        </header>
+        <div id="msg-flow" class="msg-area"></div>
+        <div class="input-bar">
+            <input type="text" id="msg-input" class="input-dark" style="margin:0;" placeholder="Mensagem...">
+            <button class="avatar" style="background: var(--primary); border:none; color:#fff;" onclick="ctrl.send()">
+                <i class="ri-send-plane-fill"></i>
+            </button>
         </div>
     </div>
 
-    <div class="sidebar">
-        <div class="side-header">
-            <div class="me-badge">
-                <div class="avatar" id="me-avatar" onclick="core.openSettings()">
-                    <span id="me-initials">U</span>
-                    <div class="online-status"></div>
-                </div>
-                <div style="flex:1" onclick="core.openSettings()" style="cursor:pointer;">
-                    <div id="me-name" style="font-weight: 700; font-size: 15px;">Carregando...</div>
-                    <div id="me-status" style="font-size: 12px; color: var(--text-gray);">Online</div>
-                </div>
-                <i class="ri-add-box-line" style="font-size: 24px; color: var(--accent); cursor: pointer;" onclick="core.newChat()"></i>
-            </div>
-            <div class="search-box">
-                <i class="ri-search-line" style="color: var(--text-gray);"></i>
-                <input type="text" placeholder="Buscar conversas...">
-            </div>
+    <div id="modal-contacts" class="full-modal">
+        <div class="modal-header">
+            <i class="ri-arrow-left-line" onclick="ctrl.toggleModal('modal-contacts', false)"></i>
+            <h2 style="font-weight: 800;">Contatos</h2>
         </div>
-        <div id="chat-list" class="chat-list">
+        <div style="padding: 20px;">
+            <input type="text" id="new-friend-id" class="input-dark" placeholder="ID do amigo...">
+            <button class="auth-btn" style="margin:0;" onclick="ctrl.addFriend()">ADICIONAR AMIGO</button>
+        </div>
+        <div id="contacts-list" style="flex: 1; overflow-y: auto;">
             </div>
     </div>
 
-    <div id="main-chat" class="main-chat">
-        <div id="welcome-msg" class="chat-welcome">
-            <i class="ri-message-3-line" style="font-size: 48px; margin-bottom: 16px; opacity: 0.2;"></i>
-            <h3>Selecione uma conversa</h3>
-            <p>Seas mensagens são protegidas por criptografia P2P.</p>
+    <div id="modal-profile" class="full-modal">
+        <div class="modal-header">
+            <i class="ri-arrow-left-line" onclick="ctrl.toggleModal('modal-profile', false)"></i>
+            <h2 style="font-weight: 800;">Meu Perfil</h2>
         </div>
-
-        <div id="chat-active" style="display: none; flex: 1; flex-direction: column;">
-            <div class="chat-header">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <i class="ri-arrow-left-line" style="display:none;" id="back-btn" onclick="core.closeChat()"></i>
-                    <div class="avatar" id="target-avatar" style="width: 36px; height: 36px; font-size: 14px;">T</div>
-                    <div>
-                        <div id="target-name" style="font-weight: 700; font-size: 15px;">Nome</div>
-                        <div id="target-state" style="font-size: 11px; color: #22c55e;">Conectado</div>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 15px; color: var(--text-gray); cursor: pointer;">
-                    <i class="ri-phone-line"></i>
-                    <i class="ri-vidicon-line"></i>
-                    <i class="ri-information-line"></i>
-                </div>
-            </div>
-
-            <div id="message-flow" class="message-flow"></div>
-
-            <div class="chat-input-area">
-                <i class="ri-attachment-2" style="font-size: 20px; color: var(--text-gray); cursor: pointer;"></i>
-                <div class="input-wrapper">
-                    <input type="text" id="msg-input" placeholder="Escreva uma mensagem...">
-                </div>
-                <button class="action-btn" onclick="core.sendMessage()">
-                    <i class="ri-send-plane-fill"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-settings" class="modal-overlay" onclick="core.closeSettings(event)">
-        <div class="modal" onclick="event.stopPropagation()">
-            <i class="ri-close-line close-btn" onclick="core.closeSettings()"></i>
-            <h3 style="margin-bottom: 24px;">Configurações de Perfil</h3>
-            
-            <div class="field">
-                <label>Foto de Perfil (URL)</label>
-                <input type="text" id="set-avatar" placeholder="https://link-da-imagem.com/foto.jpg">
-            </div>
-            <div class="field">
-                <label>Nome Completo</label>
-                <input type="text" id="set-name" placeholder="Ex: João Silva">
-            </div>
-            <div class="field">
-                <label>Recado / Status</label>
-                <input type="text" id="set-status" placeholder="Ex: Em reunião">
-            </div>
-            
-            <button onclick="core.saveSettings()" style="width:100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Salvar Alterações</button>
-            <button onclick="core.logout()" style="width:100%; padding: 14px; background: transparent; color: #ef4444; border: none; margin-top: 10px; font-weight: 600; cursor: pointer;">Encerrar Sessão</button>
+        <div style="padding: 30px; display: flex; flex-direction: column; align-items: center;">
+            <div class="avatar" id="prof-preview" style="width: 120px; height: 120px; font-size: 40px; margin-bottom: 20px;">?</div>
+            <input type="text" id="set-name" class="input-dark" placeholder="Nome de Exibição">
+            <input type="text" id="set-pic" class="input-dark" placeholder="URL da Foto">
+            <button class="auth-btn" onclick="ctrl.saveProfile()">SALVAR</button>
+            <button class="auth-btn" style="background: #111; margin-top: 10px;" onclick="ctrl.logout()">LOGOUT</button>
         </div>
     </div>
 </div>
 
 <script>
-const core = {
+const ctrl = {
     peer: null,
-    myId: localStorage.getItem('cwork_id'),
-    prof: JSON.parse(localStorage.getItem('cwork_prof') || '{"name":"","avatar":"","status":"Disponível"}'),
-    contacts: JSON.parse(localStorage.getItem('cwork_contacts') || '[]'),
-    history: JSON.parse(localStorage.getItem('cwork_history') || '{}'),
+    uid: localStorage.getItem('cr_id'),
+    profile: JSON.parse(localStorage.getItem('cr_prof') || '{"name":"","pic":""}'),
+    friends: JSON.parse(localStorage.getItem('cr_friends') || '[]'),
+    history: JSON.parse(localStorage.getItem('cr_history') || '{}'),
     unread: {},
-    activeChatId: null,
+    activeId: null,
 
     init() {
-        if (this.myId) {
-            document.getElementById('auth-screen').style.opacity = '0';
-            setTimeout(() => document.getElementById('auth-screen').style.display = 'none', 400);
-            this.startNetwork();
-            this.updateProfileUI();
+        if(this.uid) {
+            document.getElementById('screen-auth').style.display = 'none';
+            this.setupNetwork();
+            this.updateUI();
             this.renderHome();
         }
-        document.getElementById('msg-input').onkeydown = (e) => e.key === 'Enter' && this.sendMessage();
+        document.getElementById('msg-input').onkeydown = (e) => e.key === 'Enter' && this.send();
     },
 
     login() {
-        const id = document.getElementById('login-id').value.trim().toLowerCase();
-        if (id.length < 3) return;
-        localStorage.setItem('cwork_id', id);
+        const id = document.getElementById('my-id').value.trim().toLowerCase();
+        if(id.length < 3) return;
+        localStorage.setItem('cr_id', id);
         location.reload();
     },
 
-    startNetwork() {
-        this.peer = new Peer(this.myId);
-        this.peer.on('open', () => {
-            document.getElementById('me-status').innerText = "Online (" + this.myId + ")";
-        });
+    setupNetwork() {
+        this.peer = new Peer(this.uid);
         this.peer.on('connection', conn => {
-            conn.on('data', data => this.onReceive(conn.peer, data));
+            conn.on('data', data => this.onMsg(conn.peer, data));
         });
     },
 
-    onReceive(senderId, data) {
-        if (data.type === 'msg') {
-            if (!this.history[senderId]) this.history[senderId] = [];
-            this.history[senderId].push({ sender: senderId, text: data.text, time: data.time });
+    onMsg(sid, data) {
+        if(data.type === 'chat') {
+            if(!this.history[sid]) this.history[sid] = [];
+            this.history[sid].push({ sid, text: data.text, time: data.time });
             
-            if (this.activeChatId !== senderId) {
-                this.unread[senderId] = (this.unread[senderId] || 0) + 1;
+            if(this.activeId !== sid) {
+                this.unread[sid] = (this.unread[sid] || 0) + 1;
             } else {
-                this.renderMessages();
+                this.renderChat();
             }
-
-            if (!this.contacts.includes(senderId)) this.contacts.push(senderId);
+            
+            if(!this.friends.includes(sid)) this.friends.push(sid);
             this.save();
             this.renderHome();
         }
     },
 
     renderHome() {
-        const list = document.getElementById('chat-list');
+        const list = document.getElementById('main-chat-list');
         list.innerHTML = "";
         
-        const sorted = [...this.contacts].sort((a,b) => {
-            const lastA = this.history[a]?.at(-1)?.time || "";
-            const lastB = this.history[b]?.at(-1)?.time || "";
-            return lastB.localeCompare(lastA);
+        // Só mostra na Home quem tem conversa
+        const activeChats = Object.keys(this.history).sort((a,b) => {
+            const tA = this.history[a].at(-1)?.time || "";
+            const tB = this.history[b].at(-1)?.time || "";
+            return tB.localeCompare(tA);
         });
 
-        sorted.forEach(id => {
-            const last = this.history[id]?.at(-1);
-            const unread = this.unread[id] || 0;
-            const activeClass = this.activeChatId === id ? 'active' : '';
-
+        activeChats.forEach(id => {
+            const last = this.history[id].at(-1);
+            const count = this.unread[id] || 0;
             list.innerHTML += `
-                <div class="chat-item ${activeClass}" onclick="core.openChat('${id}')">
+                <div class="chat-item" onclick="ctrl.openChat('${id}')">
                     <div class="avatar">${id[0].toUpperCase()}</div>
                     <div class="chat-info">
-                        <div class="chat-name-row">
-                            <span class="chat-name">${id}</span>
-                            <span class="chat-time">${last ? last.time : ''}</span>
+                        <div class="c-row">
+                            <span class="c-name">${id}</span>
+                            <span class="c-time">${last ? last.time : ''}</span>
                         </div>
-                        <div class="chat-name-row">
-                            <span class="chat-preview">${last ? last.text : 'Iniciar nova conversa'}</span>
-                            ${unread > 0 ? `<div class="unread-dot">${unread}</div>` : ''}
+                        <div class="c-row">
+                            <span class="c-msg">${last ? last.text : ''}</span>
+                            ${count > 0 ? `<div class="unread-badge">${count}</div>` : ''}
                         </div>
                     </div>
                 </div>
@@ -319,108 +261,108 @@ const core = {
         });
     },
 
-    openChat(id) {
-        this.activeChatId = id;
-        this.unread[id] = 0;
-        document.getElementById('welcome-msg').style.display = 'none';
-        document.getElementById('chat-active').style.display = 'flex';
-        document.getElementById('target-name').innerText = id;
-        document.getElementById('target-avatar').innerText = id[0].toUpperCase();
-        
-        if (window.innerWidth < 768) {
-            document.getElementById('main-chat').classList.add('active');
-            document.getElementById('back-btn').style.display = 'block';
-        }
+    renderFriends() {
+        const list = document.getElementById('contacts-list');
+        list.innerHTML = "";
+        this.friends.forEach(id => {
+            list.innerHTML += `
+                <div class="contact-row" onclick="ctrl.openChat('${id}')">
+                    <div class="avatar" style="width:36px; height:36px;">${id[0].toUpperCase()}</div>
+                    <span style="font-weight:700;">${id}</span>
+                </div>
+            `;
+        });
+    },
 
-        this.renderMessages();
+    openChat(id) {
+        this.activeId = id;
+        this.unread[id] = 0;
+        document.getElementById('active-name').innerText = id;
+        document.getElementById('active-avatar').innerText = id[0].toUpperCase();
+        document.getElementById('chat-view').classList.add('active');
+        this.toggleModal('modal-contacts', false);
+        this.renderChat();
         this.renderHome();
     },
 
-    renderMessages() {
-        const flow = document.getElementById('message-flow');
+    renderChat() {
+        const flow = document.getElementById('msg-flow');
         flow.innerHTML = "";
-        const msgs = this.history[this.activeChatId] || [];
-        msgs.forEach(m => {
-            const isMe = m.sender === this.myId;
+        (this.history[this.activeId] || []).forEach(m => {
+            const isMe = m.sid === this.uid;
             flow.innerHTML += `
-                <div class="msg-group ${isMe ? 'me' : 'other'}">
-                    <div class="bubble">${m.text}</div>
-                    <span class="msg-time">${m.time}</span>
+                <div class="bubble ${isMe ? 'sent' : 'received'}">
+                    ${m.text}
+                    <span class="b-time">${m.time}</span>
                 </div>
             `;
         });
         flow.scrollTop = flow.scrollHeight;
     },
 
-    sendMessage() {
+    send() {
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
-        if (!text || !this.activeChatId) return;
+        if(!text) return;
 
-        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        this.history[this.activeChatId].push({ sender: this.myId, text, time });
+        const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        if(!this.history[this.activeId]) this.history[this.activeId] = [];
+        this.history[this.activeId].push({ sid: this.uid, text, time });
 
-        const conn = this.peer.connect(this.activeChatId);
-        conn.on('open', () => conn.send({ type: 'msg', text, time }));
+        const conn = this.peer.connect(this.activeId);
+        conn.on('open', () => conn.send({ type: 'chat', text, time }));
 
         input.value = "";
-        this.renderMessages();
+        this.renderChat();
         this.save();
         this.renderHome();
     },
 
-    openSettings() { document.getElementById('modal-settings').style.display = 'flex'; },
-    closeSettings() { document.getElementById('modal-settings').style.display = 'none'; },
-
-    saveSettings() {
-        this.prof.name = document.getElementById('set-name').value;
-        this.prof.avatar = document.getElementById('set-avatar').value;
-        this.prof.status = document.getElementById('set-status').value;
-        localStorage.setItem('cwork_prof', JSON.stringify(this.prof));
-        this.updateProfileUI();
-        this.closeSettings();
+    addFriend() {
+        const id = document.getElementById('new-friend-id').value.trim().toLowerCase();
+        if(id && id !== this.uid && !this.friends.includes(id)) {
+            this.friends.push(id);
+            this.save();
+            this.renderFriends();
+            document.getElementById('new-friend-id').value = "";
+        }
     },
 
-    updateProfileUI() {
-        document.getElementById('me-name').innerText = this.prof.name || this.myId;
-        document.getElementById('me-status').innerText = this.prof.status;
-        const avatarBox = document.getElementById('me-avatar');
-        if (this.prof.avatar) {
-            avatarBox.innerHTML = `<img src="${this.prof.avatar}">`;
+    toggleModal(mid, show) {
+        document.getElementById(mid).classList.toggle('active', show);
+        if(mid === 'modal-contacts' && show) this.renderFriends();
+    },
+
+    saveProfile() {
+        this.profile.name = document.getElementById('set-name').value;
+        this.profile.pic = document.getElementById('set-pic').value;
+        localStorage.setItem('cr_prof', JSON.stringify(this.profile));
+        this.updateUI();
+        this.toggleModal('modal-profile', false);
+    },
+
+    updateUI() {
+        document.getElementById('my-name-top').innerText = this.profile.name || this.uid;
+        const av = document.getElementById('my-avatar-top');
+        const pr = document.getElementById('prof-preview');
+        if(this.profile.pic) {
+            const img = `<img src="${this.profile.pic}">`;
+            av.innerHTML = img; pr.innerHTML = img;
         } else {
-            avatarBox.innerHTML = `<span>${(this.prof.name || this.myId)[0].toUpperCase()}</span><div class="online-status"></div>`;
+            av.innerText = this.uid[0].toUpperCase();
+            pr.innerText = this.uid[0].toUpperCase();
         }
     },
 
-    newChat() {
-        const id = prompt("ID do usuário para contato:");
-        if (id && id !== this.myId) {
-            if (!this.contacts.includes(id)) {
-                this.contacts.push(id);
-                this.history[id] = [];
-                this.save();
-            }
-            this.openChat(id);
-        }
+    closeChat() { this.activeId = null; document.getElementById('chat-view').classList.remove('active'); },
+    save() { 
+        localStorage.setItem('cr_friends', JSON.stringify(this.friends)); 
+        localStorage.setItem('cr_history', JSON.stringify(this.history)); 
     },
-
-    closeChat() {
-        document.getElementById('main-chat').classList.remove('active');
-        this.activeChatId = null;
-    },
-
-    save() {
-        localStorage.setItem('cwork_contacts', JSON.stringify(this.contacts));
-        localStorage.setItem('cwork_history', JSON.stringify(this.history));
-    },
-
-    logout() {
-        localStorage.clear();
-        location.reload();
-    }
+    logout() { localStorage.clear(); location.reload(); }
 };
 
-core.init();
+ctrl.init();
 </script>
 </body>
 </html>
