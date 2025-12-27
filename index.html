@@ -3,174 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crimson | Corporate Suite</title>
+    <title>Crimson OS | Professional Suite</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #ff3b30;
-            --bg: #000000;
-            --surface: #121214;
-            --card: #1c1c1e;
-            --border: rgba(255, 255, 255, 0.08);
-            --text: #ffffff;
-            --text-dim: #8e8e93;
+            --brand: #dc2626;
+            --brand-dark: #991b1b;
+            --bg: #09090b;
+            --surface: #18181b;
+            --panel: #27272a;
+            --border: rgba(255, 255, 255, 0.06);
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; outline: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100dvh; display: flex; overflow: hidden; }
 
-        /* --- NAVIGATION & SCREENS --- */
-        .screen { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--bg); z-index: 10; transition: transform 0.3s ease; }
-        .screen-active { display: flex; }
+        /* --- NAVEGAÇÃO --- */
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; background: var(--bg); z-index: 10; }
+        .active { display: flex; }
 
-        /* --- HEADERS --- */
+        /* --- DESIGN PROFISSIONAL (LISTA DE CHATS) --- */
         header { 
-            height: 64px; padding: 0 16px; background: rgba(18, 18, 20, 0.8); 
-            backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); 
+            height: 70px; padding: 0 24px; background: var(--surface); 
             display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
         }
-        .header-title { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; }
+        .header-user { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .avatar { 
+            width: 44px; height: 44px; border-radius: 12px; background: var(--panel);
+            display: flex; align-items: center; justify-content: center; font-weight: 600;
+            border: 1px solid var(--border); object-fit: cover;
+        }
 
-        /* --- LISTAS (CHATS) --- */
-        .list-area { flex: 1; overflow-y: auto; }
-        .chat-row { 
-            display: flex; align-items: center; padding: 14px 16px; 
-            gap: 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03);
-            transition: 0.2s;
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { 
+            padding: 16px 24px; display: flex; align-items: center; gap: 16px; 
+            cursor: pointer; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02);
         }
-        .chat-row:active { background: var(--surface); }
+        .chat-item:hover { background: rgba(255,255,255,0.03); }
         
-        .avatar-box { position: relative; }
-        .avatar { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 20px; }
-        
-        .chat-info { flex: 1; min-width: 0; }
-        .chat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .chat-name { font-weight: 600; font-size: 15px; }
-        .chat-time { font-size: 12px; color: var(--text-dim); }
-        .chat-preview { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-content { flex: 1; min-width: 0; }
+        .chat-row-1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .chat-name { font-size: 15px; font-weight: 600; }
+        .chat-time { font-size: 12px; color: var(--text-muted); }
+        .chat-row-2 { display: flex; justify-content: space-between; align-items: center; }
+        .chat-msg { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .unread-badge { 
-            background: var(--primary); color: white; font-size: 11px; font-weight: 700;
-            min-width: 20px; height: 20px; border-radius: 10px; display: flex; 
-            align-items: center; justify-content: center; padding: 0 6px;
+        /* NOTIFICAÇÃO ESTILO TELEGRAM */
+        .badge { 
+            background: var(--brand); color: white; font-size: 11px; font-weight: 700;
+            height: 20px; min-width: 20px; border-radius: 10px; 
+            display: flex; align-items: center; justify-content: center; padding: 0 6px;
         }
 
-        /* --- CHAT BUBBLES --- */
-        #chat-flow { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--bg); }
-        .bubble { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 15px; position: relative; line-height: 1.4; }
-        .sent { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
-        .received { align-self: flex-start; background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-        .meta { display: flex; justify-content: flex-end; gap: 4px; font-size: 10px; margin-top: 4px; opacity: 0.8; }
+        /* --- INTERFACE DE CHAT --- */
+        #chat-flow { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 6px; }
+        .bubble { 
+            max-width: 70%; padding: 10px 14px; border-radius: 14px; font-size: 14px; 
+            line-height: 1.5; position: relative;
+        }
+        .sent { align-self: flex-end; background: var(--brand); border-bottom-right-radius: 2px; }
+        .received { align-self: flex-start; background: var(--panel); border-bottom-left-radius: 2px; }
+        .meta { display: flex; justify-content: flex-end; gap: 4px; font-size: 10px; margin-top: 4px; color: rgba(255,255,255,0.6); }
+        .ticks { font-weight: bold; }
+        .read-ticks { color: #4ade80; } /* Verde para leitura confirmada */
 
         /* --- INPUT --- */
-        .input-bar { padding: 12px 16px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-        .field { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 10px 16px; border-radius: 20px; color: white; font-size: 15px; }
-        .send-btn { background: none; border: none; color: var(--primary); font-weight: 700; font-size: 15px; cursor: pointer; }
+        .input-area { padding: 16px 24px; background: var(--surface); display: flex; gap: 12px; align-items: center; }
+        .text-field { 
+            flex: 1; background: var(--panel); border: 1px solid var(--border); 
+            padding: 12px 16px; border-radius: 10px; color: white; outline: none;
+        }
+        .text-field:focus { border-color: var(--brand); }
 
-        /* --- FLOATING BUTTON --- */
-        .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(255, 59, 48, 0.3); border: none; color: white; font-size: 28px; cursor: pointer; z-index: 100; }
+        /* --- FAB --- */
+        .btn-main { 
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; 
+            background: var(--brand); border: none; border-radius: 18px; color: white;
+            font-size: 24px; cursor: pointer; box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+            z-index: 100;
+        }
 
         /* --- AUTH --- */
-        #auth-screen { z-index: 1000; justify-content: center; align-items: center; padding: 30px; }
-        .login-card { width: 100%; max-width: 360px; text-align: center; }
-        .logo { width: 80px; height: 80px; background: var(--primary); border-radius: 24px; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; box-shadow: 0 10px 40px rgba(255, 59, 48, 0.2); }
+        #auth-screen { z-index: 1000; align-items: center; justify-content: center; background: var(--bg); }
+        .auth-card { width: 100%; max-width: 360px; text-align: center; }
+        .auth-logo { width: 70px; height: 70px; background: var(--brand); border-radius: 20px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 30px; }
 
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen" class="screen screen-active">
-        <div class="login-card">
-            <div class="logo">C</div>
-            <h2 style="margin-bottom: 8px; font-weight: 700;">Crimson Elite</h2>
-            <p style="color: var(--text-dim); margin-bottom: 30px; font-size: 14px;">Serviço de mensagens profissionais</p>
-            <input type="text" id="login-id" class="field" placeholder="Identificador de usuário" style="margin-bottom: 12px; text-align: center; border-radius: 12px; height: 50px;">
-            <button onclick="login()" style="width: 100%; height: 50px; background: white; color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer;">Acessar Plataforma</button>
+    <div id="auth-screen" class="screen active">
+        <div class="auth-card">
+            <div class="auth-logo">C</div>
+            <h2 style="margin-bottom: 30px;">Crimson Protocol</h2>
+            <input type="text" id="login-id" class="text-field" placeholder="Digite seu nickname" style="text-align: center; margin-bottom: 12px; width: 100%;">
+            <button onclick="boot()" class="text-field" style="background: white; color: black; font-weight: 600; border: none; width: 100%; cursor: pointer;">Entrar</button>
         </div>
     </div>
 
     <div id="home-screen" class="screen">
         <header>
-            <div class="avatar" id="my-avatar-top" style="width:34px; height:34px; font-size:14px; cursor:pointer;" onclick="showScreen('profile-screen')"></div>
-            <div class="header-title">Conversas</div>
-            <div style="width: 34px;"></div>
+            <div class="header-user" onclick="openProfile()">
+                <div id="my-avatar-top" class="avatar"></div>
+                <span style="font-weight: 600;">Conversas</span>
+            </div>
+            <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted);">Sincronizar</button>
         </header>
-        <div id="chats-list" class="list-area"></div>
-        <button class="fab" onclick="showScreen('contacts-screen')">＋</button>
+        <div id="chats-list" class="chat-list"></div>
+        <button class="btn-main" onclick="showContacts()">＋</button>
     </div>
 
     <div id="contacts-screen" class="screen">
         <header>
-            <button onclick="showScreen('home-screen')" style="background:none; border:none; color:var(--primary); font-size:16px;">Cancelar</button>
-            <div class="header-title">Novo Contato</div>
-            <div style="width: 60px;"></div>
+            <button onclick="closeContacts()" style="background:none; border:none; color:var(--brand); font-weight: 600;">Fechar</button>
+            <span class="header-title">Novo Contato</span>
+            <div style="width: 50px;"></div>
         </header>
-        <div style="padding: 16px;">
-            <input type="text" id="new-contact-id" class="field" placeholder="Nickname do contato" style="width: 100%;" onkeyup="if(event.key==='Enter') addContact()">
+        <div style="padding: 20px;">
+            <input type="text" id="target-id" class="text-field" placeholder="Nickname do contato" style="width: 100%;">
+            <button onclick="addContact()" class="text-field" style="margin-top: 12px; width: 100%; background: var(--brand); border: none; font-weight: 600;">Adicionar na Agenda</button>
         </div>
-        <div id="contacts-list" class="list-area"></div>
+        <div id="contacts-list" class="chat-list"></div>
     </div>
 
     <div id="chat-screen" class="screen">
         <header>
-            <button onclick="showScreen('home-screen')" style="background:none; border:none; color:var(--primary); font-size:16px;">Voltar</button>
+            <button onclick="closeChat()" style="background:none; border:none; color:var(--brand); font-weight: 600;">Voltar</button>
             <div style="text-align: center;">
-                <div id="chat-target-name" style="font-weight: 700; font-size: 15px;">Nome</div>
-                <div id="chat-target-status" style="font-size: 11px; color: var(--text-dim);">Offline</div>
+                <div id="active-nick" style="font-weight: 600; font-size: 15px;">Nome</div>
+                <div id="active-status" style="font-size: 11px; color: var(--brand);">Online</div>
             </div>
-            <div style="width: 60px;"></div>
+            <div id="active-avatar-top" class="avatar" style="width:36px; height:36px;"></div>
         </header>
         <div id="chat-flow"></div>
-        <div class="input-bar">
-            <input type="text" id="chat-input" class="field" placeholder="Mensagem" onkeydown="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()" class="send-btn">Enviar</button>
+        <div class="input-area">
+            <input type="text" id="chat-msg" class="text-field" placeholder="Mensagem..." onkeydown="if(event.key==='Enter') sendMsg()">
+            <button onclick="sendMsg()" style="background:none; border:none; color:var(--brand); font-weight: 700;">Enviar</button>
         </div>
     </div>
 
     <div id="profile-screen" class="screen">
         <header>
-            <button onclick="showScreen('home-screen')" style="background:none; border:none; color:var(--primary); font-size:16px;">Voltar</button>
-            <div class="header-title">Meu Perfil</div>
-            <div style="width: 60px;"></div>
+            <button onclick="closeProfile()" style="background:none; border:none; color:var(--brand); font-weight: 600;">Voltar</button>
+            <span class="header-title">Configurar Perfil</span>
+            <div style="width: 50px;"></div>
         </header>
-        <div style="padding: 30px; text-align: center;">
-            <div id="profile-preview" class="avatar" style="width:100px; height:100px; margin: 0 auto 24px; font-size: 32px;"></div>
-            <input type="text" id="p-img" class="field" placeholder="URL da Foto" style="margin-bottom: 12px;">
-            <input type="text" id="p-status" class="field" placeholder="Seu Recado" style="margin-bottom: 24px;">
-            <button onclick="saveProfile()" style="width:100%; height:50px; background:var(--primary); border:none; border-radius:12px; color:white; font-weight:700;">Salvar</button>
-            <button onclick="logout()" style="margin-top: 20px; color: var(--primary); background: none; border: none; font-weight: 600;">Sair da Conta</button>
+        <div style="padding: 40px; text-align: center;">
+            <div id="p-preview" class="avatar" style="width:100px; height:100px; margin: 0 auto 20px; font-size: 30px;"></div>
+            <input type="text" id="p-img" class="text-field" placeholder="URL da Foto de Perfil" style="margin-bottom: 12px; width: 100%;">
+            <input type="text" id="p-recado" class="text-field" placeholder="Seu status/recado" style="margin-bottom: 24px; width: 100%;">
+            <button onclick="saveProfile()" class="text-field" style="background: var(--brand); border: none; font-weight: 600; width: 100%;">Salvar</button>
+            <button onclick="localStorage.clear(); location.reload();" style="margin-top: 40px; background: none; border: none; color: var(--brand); font-size: 13px;">Encerrar Sessão</button>
         </div>
     </div>
 
     <script>
-        let peer, myId, activePeer = null, connections = {};
+        let peer, myId, activePeer = null, conns = {};
         let db = {
-            profile: JSON.parse(localStorage.getItem('crim_v2_prof') || '{"img":"","status":"Disponível"}'),
-            contacts: JSON.parse(localStorage.getItem('crim_v2_cont') || '[]'),
-            history: JSON.parse(localStorage.getItem('crim_v2_hist') || '{}'),
-            unread: JSON.parse(localStorage.getItem('crim_v2_unrd') || '{}')
+            profile: JSON.parse(localStorage.getItem('c_prof') || '{"img":"","status":"No Crimson"}'),
+            contacts: JSON.parse(localStorage.getItem('c_cont') || '[]'),
+            history: JSON.parse(localStorage.getItem('c_hist') || '{}'),
+            unread: JSON.parse(localStorage.getItem('c_unrd') || '{}')
         };
 
-        function login() {
+        function boot() {
             const id = document.getElementById('login-id').value.trim().toLowerCase();
             if(!id) return;
-            localStorage.setItem('crim_v2_user', id);
+            localStorage.setItem('c_uid', id);
             location.reload();
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
-
         window.onload = () => {
-            myId = localStorage.getItem('crim_v2_user');
+            myId = localStorage.getItem('c_uid');
             if(myId) {
-                document.getElementById('auth-screen').classList.remove('screen-active');
-                showScreen('home-screen');
+                document.getElementById('auth-screen').classList.remove('active');
+                document.getElementById('home-screen').classList.add('active');
                 initPeer();
-                updateUI();
+                updateProfileUI();
             }
         };
 
@@ -180,37 +196,44 @@
                 renderHome();
                 db.contacts.forEach(id => connectTo(id));
             });
-            // ESSENCIAL: Escuta global para mensagens chegando enquanto você está na home
-            peer.on('connection', conn => handleConnection(conn));
+            peer.on('connection', conn => setupConn(conn));
         }
 
-        function handleConnection(conn) {
-            connections[conn.peer] = conn;
+        function setupConn(conn) {
+            conns[conn.peer] = conn;
             conn.on('open', () => {
-                if(activePeer === conn.peer) document.getElementById('chat-target-status').innerText = "Online";
-                // Envia mensagens que você mandou enquanto o outro estava offline
-                const pending = (db.history[conn.peer] || []).filter(m => m.from === myId && !m.read);
-                pending.forEach(m => conn.send(m));
+                if(activePeer === conn.peer) document.getElementById('active-status').innerText = "Online";
+                // Enviar pendentes
+                (db.history[conn.peer] || []).filter(m => m.from === myId && !m.read).forEach(m => conn.send(m));
             });
             conn.on('data', data => {
                 if(data.type === 'msg') {
-                    receiveMessage(conn.peer, data);
+                    handleIncoming(conn.peer, data);
                     conn.send({type: 'ack', id: data.id});
                 } else if(data.type === 'ack') {
-                    const msg = db.history[conn.peer]?.find(m => m.id === data.id);
-                    if(msg) { msg.read = true; save(); if(activePeer === conn.peer) renderChat(); }
+                    const m = db.history[conn.peer]?.find(x => x.id === data.id);
+                    if(m) { m.read = true; save(); if(activePeer === conn.peer) renderChat(); }
                 }
-            });
-            conn.on('close', () => {
-                delete connections[conn.peer];
-                if(activePeer === conn.peer) document.getElementById('chat-target-status').innerText = "Offline";
             });
         }
 
-        function connectTo(id) { if(!connections[id]) handleConnection(peer.connect(id)); }
+        function connectTo(id) { if(!conns[id]) setupConn(peer.connect(id)); }
 
-        function sendMessage() {
-            const input = document.getElementById('chat-input');
+        function handleIncoming(from, msg) {
+            if(!db.history[from]) db.history[from] = [];
+            if(!db.history[from].find(m => m.id === msg.id)) {
+                db.history[from].push({...msg, read: true});
+                if(activePeer !== from) {
+                    db.unread[from] = (db.unread[from] || 0) + 1;
+                }
+                save();
+                renderHome();
+                if(activePeer === from) renderChat();
+            }
+        }
+
+        function sendMsg() {
+            const input = document.getElementById('chat-msg');
             if(!input.value || !activePeer) return;
             const msg = {
                 id: Date.now(), from: myId, text: input.value, type: 'msg',
@@ -218,48 +241,26 @@
             };
             if(!db.history[activePeer]) db.history[activePeer] = [];
             db.history[activePeer].push(msg);
-            if(connections[activePeer]?.open) connections[activePeer].send(msg); else connectTo(activePeer);
+            if(conns[activePeer]?.open) conns[activePeer].send(msg); else connectTo(activePeer);
             input.value = ""; save(); renderChat(); renderHome();
-        }
-
-        function receiveMessage(from, msg) {
-            if(!db.history[from]) db.history[from] = [];
-            if(!db.history[from].find(m => m.id === msg.id)) {
-                db.history[from].push({...msg, read: true});
-                
-                // Lógica de Unread (Notificação na Home)
-                if(activePeer !== from) {
-                    db.unread[from] = (db.unread[from] || 0) + 1;
-                }
-
-                save();
-                renderHome();
-                if(activePeer === from) renderChat();
-            }
         }
 
         function renderHome() {
             const list = document.getElementById('chats-list');
             list.innerHTML = "";
-            
-            // Ordena por última mensagem
-            const chats = Object.keys(db.history).sort((a,b) => {
-                const la = db.history[a].slice(-1)[0]?.id || 0;
-                const lb = db.history[b].slice(-1)[0]?.id || 0;
-                return lb - la;
-            });
+            const sorted = Object.keys(db.history).sort((a,b) => (db.history[b].slice(-1)[0]?.id || 0) - (db.history[a].slice(-1)[0]?.id || 0));
 
-            chats.forEach(id => {
+            sorted.forEach(id => {
                 const last = db.history[id].slice(-1)[0];
-                const unreadCount = db.unread[id] || 0;
+                const count = db.unread[id] || 0;
                 list.innerHTML += `
-                    <div class="chat-row" onclick="openChat('${id}')">
+                    <div class="chat-item" onclick="openChat('${id}')">
                         <div class="avatar">${id[0].toUpperCase()}</div>
-                        <div class="chat-info">
-                            <div class="chat-top"><span class="chat-name">${id}</span><span class="chat-time">${last?.time || ''}</span></div>
-                            <div class="chat-top">
-                                <span class="chat-preview">${last?.text || 'Sem mensagens'}</span>
-                                ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
+                        <div class="chat-content">
+                            <div class="chat-row-1"><span class="chat-name">${id}</span><span class="chat-time">${last?.time || ''}</span></div>
+                            <div class="chat-row-2">
+                                <span class="chat-msg">${last?.text || 'Mídia'}</span>
+                                ${count > 0 ? `<div class="badge">${count}</div>` : ''}
                             </div>
                         </div>
                     </div>`;
@@ -268,11 +269,12 @@
 
         function openChat(id) {
             activePeer = id;
-            db.unread[id] = 0; // Limpa notificações ao abrir
+            db.unread[id] = 0;
             save();
-            document.getElementById('chat-target-name').innerText = id;
-            document.getElementById('chat-target-status').innerText = connections[id] ? "Online" : "Offline";
-            showScreen('chat-screen');
+            document.getElementById('active-nick').innerText = id;
+            document.getElementById('active-avatar-top').innerText = id[0].toUpperCase();
+            document.getElementById('active-status').innerText = conns[id]?.open ? "Online" : "Offline";
+            document.getElementById('chat-screen').classList.add('active');
             renderChat();
             renderHome();
             connectTo(id);
@@ -286,49 +288,57 @@
                 flow.innerHTML += `
                     <div class="bubble ${isMe ? 'sent' : 'received'}">
                         ${m.text}
-                        <div class="meta">${m.time} ${isMe ? `<span>${m.read ? '✓✓' : '✓'}</span>` : ''}</div>
+                        <div class="meta">${m.time} ${isMe ? `<span class="ticks ${m.read?'read-ticks':''}">${m.read?'✓✓':'✓'}</span>`:''}</div>
                     </div>`;
             });
             flow.scrollTop = flow.scrollHeight;
         }
 
+        // NAVIGATION
+        function showContacts() { document.getElementById('contacts-screen').classList.add('active'); renderContacts(); }
+        function closeContacts() { document.getElementById('contacts-screen').classList.remove('active'); }
+        function closeChat() { document.getElementById('chat-screen').classList.remove('active'); activePeer = null; }
+        function openProfile() { 
+            document.getElementById('p-img').value = db.profile.img;
+            document.getElementById('p-recado').value = db.profile.status;
+            document.getElementById('profile-screen').classList.add('active'); 
+        }
+        function closeProfile() { document.getElementById('profile-screen').classList.remove('active'); }
+
         function addContact() {
-            const id = document.getElementById('new-contact-id').value.trim().toLowerCase();
+            const id = document.getElementById('target-id').value.trim().toLowerCase();
             if(id && id !== myId && !db.contacts.includes(id)) {
                 db.contacts.push(id);
                 if(!db.history[id]) db.history[id] = [];
-                save(); renderHome();
-                document.getElementById('new-contact-id').value = "";
-                openChat(id);
+                save(); renderContacts(); closeContacts(); openChat(id);
             }
+        }
+
+        function renderContacts() {
+            const list = document.getElementById('contacts-list');
+            list.innerHTML = "";
+            db.contacts.forEach(id => {
+                list.innerHTML += `<div class="chat-item" onclick="openChat('${id}'); closeContacts();"><div class="avatar">${id[0].toUpperCase()}</div><div class="chat-name">${id}</div></div>`;
+            });
         }
 
         function saveProfile() {
             db.profile.img = document.getElementById('p-img').value;
-            db.profile.status = document.getElementById('p-status').value;
-            save(); updateUI(); showScreen('home-screen');
+            db.profile.status = document.getElementById('p-recado').value;
+            save(); updateProfileUI(); closeProfile();
         }
 
-        function updateUI() {
-            const img = db.profile.img || `https://ui-avatars.com/api/?background=1c1c1e&color=fff&name=${myId}`;
-            const avHTML = db.profile.img ? `<img src="${img}" style="width:100%;height:100%;border-radius:14px;">` : myId[0].toUpperCase();
+        function updateProfileUI() {
+            const avHTML = db.profile.img ? `<img src="${db.profile.img}" style="width:100%;height:100%;border-radius:12px;">` : myId[0].toUpperCase();
             document.getElementById('my-avatar-top').innerHTML = avHTML;
-            document.getElementById('profile-preview').innerHTML = avHTML;
-            document.getElementById('p-img').value = db.profile.img;
-            document.getElementById('p-status').value = db.profile.status;
-        }
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen-active'));
-            document.getElementById(id).classList.add('screen-active');
-            if(id === 'home-screen') activePeer = null; // Reseta chat ativo para receber notificações
+            document.getElementById('p-preview').innerHTML = avHTML;
         }
 
         function save() {
-            localStorage.setItem('crim_v2_cont', JSON.stringify(db.contacts));
-            localStorage.setItem('crim_v2_hist', JSON.stringify(db.history));
-            localStorage.setItem('crim_v2_prof', JSON.stringify(db.profile));
-            localStorage.setItem('crim_v2_unrd', JSON.stringify(db.unread));
+            localStorage.setItem('c_cont', JSON.stringify(db.contacts));
+            localStorage.setItem('c_hist', JSON.stringify(db.history));
+            localStorage.setItem('c_prof', JSON.stringify(db.profile));
+            localStorage.setItem('c_unrd', JSON.stringify(db.unread));
         }
     </script>
 </body>
