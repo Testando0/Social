@@ -1,7 +1,7 @@
 const sys = {
     peer: null, uid: null, db: {}, conns: {}, currentChat: null,
     recorder: null, chunks: [], tempFile: null, viewOnce: false,
-    localStream: null, currentCall: null,
+    localStream: null, incomingCall: null, isVideo: false,
 
     init() {
         this.db = JSON.parse(localStorage.getItem('crimson_db') || '{}');
@@ -9,9 +9,9 @@ const sys = {
         if(session && this.db[session]) {
             this.uid = session;
             this.startApp();
+        } else {
+            document.getElementById('auth-screen').style.display = 'flex';
         }
-        
-        // Listener de Input para trocar Microfone/Enviar
         document.getElementById('msg-input').oninput = (e) => {
             const hasVal = e.target.value.trim().length > 0;
             document.getElementById('btn-audio').classList.toggle('hidden', hasVal);
@@ -22,13 +22,11 @@ const sys = {
     auth(isReg) {
         const id = document.getElementById('auth-id').value.trim().toLowerCase();
         const pass = document.getElementById('auth-pass').value.trim();
-        if(!id || !pass) return alert("Preencha tudo");
-
         if(isReg) {
             if(this.db[id]) return alert("ID já existe");
-            this.db[id] = { pass, name: id, pic: "", friends: {}, lastSeen: 'online' };
+            this.db[id] = { pass, name: id, bio: "Crimson User", pic: "", friends: {}, groups: {}, lastSeen: 'online' };
             this.save();
-            alert("Registrado!");
+            alert("Criado!");
         } else {
             if(!this.db[id] || this.db[id].pass !== pass) return alert("Erro");
             this.uid = id;
@@ -40,212 +38,157 @@ const sys = {
     startApp() {
         document.getElementById('auth-screen').style.display = 'none';
         this.peer = new Peer(this.uid);
-        
-        this.peer.on('open', () => this.updateStatus('online'));
-        this.peer.on('connection', conn => this.handleConn(conn));
-        this.peer.on('call', call => this.handleCall(call));
-
+        this.peer.on('open', () => this.updateOnlineStatus('online'));
+        this.peer.on('connection', c => this.setupConn(c));
+        this.peer.on('call', call => { if(confirm("Atender chamada?")) this.answerCall(call); });
         this.updateHeader();
         this.renderHome();
-        
-        // Corrigir Visto por Último ao fechar aba
-        window.addEventListener('beforeunload', () => this.updateStatus(Date.now()));
+        window.onbeforeunload = () => this.updateOnlineStatus(Date.now());
     },
 
-    updateStatus(val) {
+    updateOnlineStatus(val) {
+        if(!this.db[this.uid]) return;
         this.db[this.uid].lastSeen = val;
         this.save();
-        Object.values(this.conns).forEach(c => {
-            if(c.open) c.send({ type: 'status', val });
+        Object.values(this.conns).forEach(c => { if(c.open) c.send({ type: 'status', val }); });
+    },
+
+    setupConn(conn) {
+        this.conns[conn.peer] = conn;
+        conn.on('data', d => {
+            if(d.type === 'status' && this.db[this.uid].friends[conn.peer]) {
+                this.db[this.uid].friends[conn.peer].lastSeen = d.val;
+                if(this.currentChat === conn.peer) this.updateChatHeader(conn.peer);
+            }
+            if(d.type === 'msg') {
+                this.pushMsg(conn.peer, conn.peer, d);
+                if(this.currentChat === conn.peer) this.renderMsgs();
+                this.renderHome();
+            }
         });
     },
 
-    handleConn(conn) {
-        this.conns[conn.peer] = conn;
-        conn.on('open', () => conn.send({ type: 'status', val: 'online' }));
-        conn.on('data', data => this.handleData(conn.peer, data));
-        conn.on('close', () => this.db[this.uid].friends[conn.peer].lastSeen = Date.now());
-    },
-
-    handleData(sender, data) {
-        if(data.type === 'status') {
-            if(this.db[this.uid].friends[sender]) {
-                this.db[this.uid].friends[sender].lastSeen = data.val;
-                if(this.currentChat === sender) this.updateChatHeader(sender);
-            }
-        }
-        if(data.type === 'msg') {
-            this.pushMsg(sender, sender, data);
-            if(this.currentChat === sender) this.renderMsgs();
-            this.renderHome();
-        }
-    },
-
     // --- MENSAGENS E MÍDIA ---
-    sendText() {
+    send() {
         const input = document.getElementById('msg-input');
-        const text = input.value.trim();
-        if(!text) return;
-        this.broadcast({ type: 'text', content: text });
+        this.broadcast({ type: 'text', content: input.value });
         input.value = '';
         input.dispatchEvent(new Event('input'));
     },
 
-    broadcast(msgData) {
+    broadcast(msg) {
+        const payload = { ...msg, id: Date.now(), sender: this.uid };
         const target = this.currentChat;
-        const msg = { ...msgData, id: Date.now(), sender: this.uid };
-        
         if(this.conns[target] && this.conns[target].open) {
-            this.conns[target].send({ type: 'msg', ...msg });
-        } else {
-            const conn = this.peer.connect(target);
-            this.handleConn(conn);
-            setTimeout(() => conn.send({ type: 'msg', ...msg }), 1000);
+            this.conns[target].send({ type: 'msg', ...payload });
         }
-
-        this.pushMsg(target, this.uid, msg);
+        this.pushMsg(target, this.uid, payload);
         this.renderMsgs();
+        this.renderHome();
     },
 
     pushMsg(chatId, sender, data) {
-        if(!this.db[this.uid].friends[chatId]) this.db[this.uid].friends[chatId] = { history: [] };
-        this.db[this.uid].friends[chatId].history.push({ ...data, sender });
+        if(chatId.startsWith('group_')) {
+            this.db[this.uid].groups[chatId].history.push({...data, sender});
+        } else {
+            if(!this.db[this.uid].friends[chatId]) this.db[this.uid].friends[chatId] = { history: [], lastSeen: 0 };
+            this.db[this.uid].friends[chatId].history.push({...data, sender});
+        }
         this.save();
     },
 
-    // --- ÁUDIO ---
+    // --- AUDIO ---
     async startRec() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         this.recorder = new MediaRecorder(stream);
         this.chunks = [];
         this.recorder.ondataavailable = e => this.chunks.push(e.data);
-        this.recorder.onstop = () => this.finishAudio();
+        this.recorder.onstop = () => {
+            const blob = new Blob(this.chunks, { type: 'audio/ogg' });
+            const reader = new FileReader();
+            reader.onload = () => this.broadcast({ type: 'audio', content: reader.result });
+            reader.readAsDataURL(blob);
+        };
         this.recorder.start();
-        document.getElementById('btn-audio').style.color = "var(--primary)";
+        document.getElementById('btn-audio').style.color = 'var(--primary)';
     },
+    stopRec() { if(this.recorder) this.recorder.stop(); document.getElementById('btn-audio').style.color = ''; },
 
-    stopRec() { if(this.recorder) this.recorder.stop(); document.getElementById('btn-audio').style.color = ""; },
-
-    finishAudio() {
-        const blob = new Blob(this.chunks, { type: 'audio/ogg' });
-        const reader = new FileReader();
-        reader.onload = () => this.broadcast({ type: 'audio', content: reader.result });
-        reader.readAsDataURL(blob);
-    },
-
-    // --- FOTOS / VIDEOS ---
+    // --- FOTOS/VIDEOS ---
     handleFile(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        this.tempFile = file;
+        this.tempFile = e.target.files[0];
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const preview = document.getElementById('preview-content');
-            preview.innerHTML = file.type.includes('image') ? `<img src="${ev.target.result}">` : `<video src="${ev.target.result}" controls></video>`;
+            const disp = document.getElementById('preview-display');
+            disp.innerHTML = this.tempFile.type.includes('image') ? `<img src="${ev.target.result}" style="max-width:90%">` : `<video src="${ev.target.result}" controls style="max-width:90%"></video>`;
             document.getElementById('media-preview').classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    },
-
-    toggleViewOnce() {
-        this.viewOnce = !this.viewOnce;
-        document.getElementById('v-once-status').innerText = this.viewOnce ? "ON" : "OFF";
-    },
-
-    sendMedia() {
-        const reader = new FileReader();
-        reader.onload = () => {
-            this.broadcast({
-                type: this.tempFile.type.includes('image') ? 'image' : 'video',
-                content: reader.result,
-                viewOnce: this.viewOnce,
-                caption: document.getElementById('media-caption').value
-            });
-            this.cancelMedia();
         };
         reader.readAsDataURL(this.tempFile);
     },
 
-    cancelMedia() {
-        document.getElementById('media-preview').classList.add('hidden');
-        this.tempFile = null;
-        this.viewOnce = false;
-        document.getElementById('v-once-status').innerText = "OFF";
+    toggleViewOnce() { this.viewOnce = !this.viewOnce; document.getElementById('v-once-txt').innerText = this.viewOnce ? "ON" : "OFF"; },
+    
+    sendMedia() {
+        const reader = new FileReader();
+        reader.onload = () => {
+            this.broadcast({ type: this.tempFile.type.includes('image') ? 'image' : 'video', content: reader.result, viewOnce: this.viewOnce });
+            this.cancelMedia();
+        };
+        reader.readAsDataURL(this.tempFile);
     },
+    cancelMedia() { document.getElementById('media-preview').classList.add('hidden'); this.viewOnce = false; },
 
-    // --- CHAMADAS (ESTILO TELEGRAM) ---
+    // --- CHAMADAS ---
     async call(video) {
+        this.isVideo = video;
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: video });
         this.localStream = stream;
         const call = this.peer.call(this.currentChat, stream);
-        this.setupCallUI(this.currentChat, video);
-        this.handleCall(call);
+        this.setupCallUI(this.currentChat);
+        call.on('stream', rem => { document.getElementById('remote-video').srcObject = rem; if(video) document.getElementById('remote-video').style.opacity = 1; });
     },
 
-    handleCall(call) {
-        this.currentCall = call;
-        call.on('stream', remote => {
-            document.getElementById('remote-video').srcObject = remote;
-            if(!this.localStream) this.setupCallUI(call.peer, false);
-        });
-        call.on('close', () => this.endCall());
+    async answerCall(call) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        this.localStream = stream;
+        call.answer(stream);
+        this.setupCallUI(call.peer);
+        call.on('stream', rem => { document.getElementById('remote-video').srcObject = rem; });
     },
 
-    setupCallUI(id, video) {
+    setupCallUI(id) {
         const ui = document.getElementById('call-ui');
         ui.classList.add('active');
         const f = this.db[this.uid].friends[id] || { name: id };
-        document.getElementById('call-name-ui').innerText = f.name;
-        document.getElementById('call-img').src = f.pic || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-        
-        if(video) {
-            document.getElementById('local-video').classList.remove('hidden');
-            document.getElementById('local-video').srcObject = this.localStream;
-            document.getElementById('remote-video').style.opacity = "1";
-        } else {
-            document.getElementById('local-video').classList.add('hidden');
-            document.getElementById('remote-video').style.opacity = "0"; // Esconde vídeo na voz
-        }
+        document.getElementById('voice-call-name').innerText = f.name;
+        document.getElementById('voice-call-img').src = f.pic || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
     },
 
     endCall() {
-        if(this.currentCall) this.currentCall.close();
         if(this.localStream) this.localStream.getTracks().forEach(t => t.stop());
         document.getElementById('call-ui').classList.remove('active');
     },
 
-    // --- UTILS ---
-    updateChatHeader(id) {
-        const f = this.db[this.uid].friends[id];
-        document.getElementById('chat-name').innerText = f.name || id;
-        const statusEl = document.getElementById('chat-status-text');
-        
-        if(f.lastSeen === 'online') {
-            statusEl.innerText = "Online";
-            statusEl.style.color = "#4ade80";
-        } else {
-            const date = new Date(f.lastSeen);
-            statusEl.innerText = `Visto por último: ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-            statusEl.style.color = "var(--text-dim)";
-        }
-    },
-
+    // --- UI RENDER ---
     renderMsgs() {
         const area = document.getElementById('messages');
         area.innerHTML = '';
-        const history = this.db[this.uid].friends[this.currentChat].history;
-        
-        history.forEach((m, idx) => {
+        const chat = this.currentChat.startsWith('group_') ? this.db[this.uid].groups[this.currentChat] : this.db[this.uid].friends[this.currentChat];
+        chat.history.forEach((m, i) => {
             const div = document.createElement('div');
             div.className = `bubble ${m.sender === this.uid ? 'sent' : 'received'}`;
-            
             if(m.viewOnce && m.sender !== this.uid) {
-                div.innerHTML = `<i class="ri-eye-off-line"></i> Foto de visualização única (Clique)`;
-                div.onclick = () => this.openViewOnce(m, idx);
+                div.innerHTML = `<i>👁 Visualização Única (Clique)</i>`;
+                div.onclick = () => { 
+                    const p = document.getElementById('preview-display');
+                    p.innerHTML = m.type === 'image' ? `<img src="${m.content}" style="max-width:90%">` : `<video src="${m.content}" autoplay style="max-width:90%"></video>`;
+                    document.getElementById('media-preview').classList.remove('hidden');
+                    chat.history.splice(i, 1); this.save(); 
+                };
             } else {
                 if(m.type === 'text') div.innerText = m.content;
                 if(m.type === 'audio') div.innerHTML = `<audio src="${m.content}" controls style="width:200px"></audio>`;
-                if(m.type === 'image') div.innerHTML = `<img src="${m.content}" style="max-width:100%; border-radius:8px;"><p>${m.caption || ''}</p>`;
+                if(m.type === 'image') div.innerHTML = `<img src="${m.content}" style="max-width:100%; border-radius:8px;">`;
                 if(m.type === 'video') div.innerHTML = `<video src="${m.content}" controls style="max-width:100%;"></video>`;
             }
             area.appendChild(div);
@@ -253,45 +196,93 @@ const sys = {
         area.scrollTop = area.scrollHeight;
     },
 
-    openViewOnce(m, idx) {
-        const preview = document.getElementById('preview-content');
-        preview.innerHTML = m.type === 'image' ? `<img src="${m.content}">` : `<video src="${m.content}" autoplay></video>`;
-        document.getElementById('media-preview').classList.remove('hidden');
-        document.getElementById('view-once-btn').classList.add('hidden');
-        
-        // Deletar após fechar
-        const closeBtn = document.querySelector('.preview-header i');
-        const oldClick = closeBtn.onclick;
-        closeBtn.onclick = () => {
-            this.db[this.uid].friends[this.currentChat].history.splice(idx, 1);
-            this.save();
-            this.cancelMedia();
-            this.renderMsgs();
-            closeBtn.onclick = oldClick;
-            document.getElementById('view-once-btn').classList.remove('hidden');
-        };
-    },
-
-    save() { localStorage.setItem('crimson_db', JSON.stringify(this.db)); },
     renderHome() {
         const list = document.getElementById('chat-list');
         list.innerHTML = '';
-        Object.keys(this.db[this.uid].friends).forEach(id => {
-            const f = this.db[this.uid].friends[id];
-            const last = f.history[f.history.length-1]?.content || "Inicie uma conversa";
+        [...Object.keys(this.db[this.uid].friends), ...Object.keys(this.db[this.uid].groups)].forEach(id => {
+            const isGrp = id.startsWith('group_');
+            const data = isGrp ? this.db[this.uid].groups[id] : this.db[this.uid].friends[id];
             const div = document.createElement('div');
-            div.className = 'contact-item'; // Adicione estilo no CSS se desejar
-            div.style.padding = "20px"; div.style.borderBottom = "1px solid var(--border)";
-            div.innerHTML = `<strong>${f.name || id}</strong><br><small style="color:gray">${last.substring(0,30)}</small>`;
+            div.style.padding = '15px'; div.style.borderBottom = '1px solid var(--border)';
+            div.innerHTML = `<strong>${data.name || id}</strong>`;
             div.onclick = () => this.openChat(id);
             list.appendChild(div);
         });
     },
-    openChat(id) { this.currentChat = id; document.getElementById('view-chat').classList.add('active'); this.updateChatHeader(id); this.renderMsgs(); },
-    closeChat() { document.getElementById('view-chat').classList.remove('active'); this.currentChat = null; },
-    toggleFab() { document.getElementById('fab-menu').classList.toggle('active'); },
-    openView(id) { document.getElementById(id).classList.add('active'); },
+
+    // --- RE-IMPLEMENTANDO FUNÇÕES DE GRUPO DO USUÁRIO ---
+    renderCreateGroup() {
+        const list = document.getElementById('group-contact-list');
+        list.innerHTML = '';
+        this.selectedGroupMembers = [];
+        Object.keys(this.db[this.uid].friends).forEach(id => {
+            const f = this.db[this.uid].friends[id];
+            const div = document.createElement('div');
+            div.style.padding = '10px'; div.innerHTML = `<input type="checkbox" value="${id}"> ${f.name || id}`;
+            div.onclick = (e) => {
+                const cb = div.querySelector('input');
+                if(e.target !== cb) cb.checked = !cb.checked;
+                if(cb.checked) this.selectedGroupMembers.push(id);
+                else this.selectedGroupMembers = this.selectedGroupMembers.filter(m => m !== id);
+            };
+            list.appendChild(div);
+        });
+    },
+
+    createGroup() {
+        const name = document.getElementById('group-name-input').value;
+        const gid = 'group_' + Date.now();
+        this.db[this.uid].groups[gid] = { name, members: [this.uid, ...this.selectedGroupMembers], history: [] };
+        this.save(); this.renderHome(); this.closeView('view-create-group');
+    },
+
+    openChat(id) { 
+        this.currentChat = id; 
+        document.getElementById('view-chat').classList.add('active'); 
+        this.updateChatHeader(id); this.renderMsgs(); 
+        if(!id.startsWith('group_')) {
+            const conn = this.peer.connect(id);
+            this.setupConn(conn);
+        }
+    },
+
+    updateChatHeader(id) {
+        const isGrp = id.startsWith('group_');
+        const f = isGrp ? this.db[this.uid].groups[id] : this.db[this.uid].friends[id];
+        document.getElementById('chat-name').innerText = f.name || id;
+        const st = document.getElementById('chat-status-text');
+        if(isGrp) st.innerText = `${f.members.length} membros`;
+        else {
+            if(f.lastSeen === 'online') { st.innerText = 'Online'; st.style.color = 'var(--primary)'; }
+            else { 
+                const d = new Date(f.lastSeen); 
+                st.innerText = f.lastSeen ? `Visto ${d.getHours()}:${d.getMinutes()}` : 'Desconhecido';
+                st.style.color = '';
+            }
+        }
+    },
+
+    save() { localStorage.setItem('crimson_db', JSON.stringify(this.db)); },
+    openView(id) { if(id === 'view-create-group') this.renderCreateGroup(); document.getElementById(id).classList.add('active'); },
     closeView(id) { document.getElementById(id).classList.remove('active'); },
+    closeChat() { this.currentChat = null; document.getElementById('view-chat').classList.remove('active'); },
+    toggleFab() { document.getElementById('fab-menu').classList.toggle('show'); },
+    updateHeader() { 
+        const me = this.db[this.uid];
+        document.getElementById('header-name').innerText = me.name;
+        document.getElementById('header-av').innerHTML = me.pic ? `<img src="${me.pic}">` : me.name[0].toUpperCase();
+    },
+    saveProfile() {
+        this.db[this.uid].name = document.getElementById('edit-name').value;
+        this.db[this.uid].bio = document.getElementById('edit-bio').value;
+        this.db[this.uid].pic = document.getElementById('edit-pic').value;
+        this.save(); this.updateHeader(); this.closeView('view-me');
+    },
+    addContact() {
+        const id = document.getElementById('target-id').value.toLowerCase();
+        if(!this.db[this.uid].friends[id]) this.db[this.uid].friends[id] = { name: id, history: [], lastSeen: 0 };
+        this.save(); this.renderHome(); this.closeView('view-add');
+    },
     logout() { localStorage.removeItem('crimson_session'); location.reload(); }
 };
 
