@@ -4,71 +4,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>CRIMSON | ENTERPRISE</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="app">
-        <div id="auth-screen">
+
+<div id="app">
+    <div id="auth-screen">
+        <div style="text-align: center; margin-bottom: 30px;">
             <i class="ri-shield-keyhole-fill" style="font-size: 60px; color: var(--primary);"></i>
-            <h1>CRIMSON</h1>
-            <div class="auth-content">
-                <input type="text" id="auth-id" class="field" placeholder="ID Usuário">
-                <input type="password" id="auth-pass" class="field" placeholder="Senha">
-                <button class="btn" onclick="sys.auth(false)">ENTRAR</button>
-                <button class="btn btn-outline" onclick="sys.auth(true)">CRIAR CONTA</button>
+            <h1 style="letter-spacing: 2px;">CRIMSON</h1>
+            <p style="color: var(--text-dim); font-size: 12px;">SECURITY PROTOCOL ACTIVE</p>
+        </div>
+        <div class="auth-content">
+            <input type="text" id="auth-id" class="field" placeholder="ID de Usuário">
+            <input type="password" id="auth-pass" class="field" placeholder="Senha de Acesso">
+            <button class="btn" onclick="sys.auth(false)">LOGAR</button>
+            <button class="btn" style="background: #1a1a1e; border: 1px solid var(--border);" onclick="sys.auth(true)">REGISTRAR NOVO ID</button>
+        </div>
+    </div>
+
+    <header id="main-header">
+        <div class="user-meta" onclick="sys.openView('view-me')">
+            <div class="avatar" id="header-av"></div>
+            <div>
+                <div id="header-name" style="font-weight: 700;">...</div>
+                <div style="font-size: 10px; color: #4ade80; font-weight: 800;">SISTEMA ONLINE</div>
             </div>
         </div>
+        <i class="ri-settings-5-line" style="font-size: 24px;" onclick="sys.openView('view-me')"></i>
+    </header>
 
+    <div id="chat-list" style="flex:1; overflow-y:auto;"></div>
+
+    <div class="fab-menu" id="fab-menu">
+        <div class="fab-item" onclick="sys.openView('view-add')">
+            <span>Novo Contato</span>
+            <div class="fab-btn-mini"><i class="ri-user-add-line"></i></div>
+        </div>
+        <div class="fab-item" onclick="sys.openView('view-create-group')">
+            <span>Criar Grupo</span>
+            <div class="fab-btn-mini"><i class="ri-group-line"></i></div>
+        </div>
+    </div>
+    <div class="fab" onclick="sys.toggleFab()"><i class="ri-add-line" id="fab-icon"></i></div>
+
+    <div id="view-chat" class="view">
         <header>
-            <div class="user-meta" onclick="sys.openView('view-me')">
-                <div class="avatar" id="header-av"></div>
-                <div><div id="header-name">...</div><div class="status">ONLINE</div></div>
+            <i class="ri-arrow-left-s-line" onclick="sys.closeChat()" style="font-size: 30px;"></i>
+            <div style="flex:1; display:flex; align-items:center; gap:12px;" onclick="sys.showContact()">
+                <div class="avatar" id="chat-av" style="width:38px; height:38px;"></div>
+                <div>
+                    <div id="chat-name" style="font-weight: 600;">...</div>
+                    <div id="chat-status-text" style="font-size: 11px;">Offline</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:18px; color: var(--primary); font-size: 22px;">
+                <i class="ri-phone-fill" onclick="sys.call(false)"></i>
+                <i class="ri-vidicon-fill" onclick="sys.call(true)"></i>
             </div>
         </header>
 
-        <div id="chat-list"></div>
+        <div id="messages" class="chat-area"></div>
 
-        <div class="fab-menu" id="fab-menu">
-            <div class="fab-item" onclick="sys.openView('view-add')"><span>Novo Contato</span><div class="fab-btn-mini"><i class="ri-user-add-line"></i></div></div>
-        </div>
-        <div class="fab" onclick="sys.toggleFab()"><i class="ri-add-line" id="fab-icon"></i></div>
-
-        <div id="view-chat" class="view">
-            <header>
-                <i class="ri-arrow-left-s-line" onclick="sys.closeChat()"></i>
-                <div class="chat-info" style="flex:1; margin-left:10px;">
-                    <div id="chat-name" style="font-weight:700;">Nome</div>
-                    <div id="chat-status" style="font-size:10px; color:var(--text-dim);">Conectando...</div>
+        <div id="media-preview" class="media-preview-container hidden">
+            <div class="preview-header">
+                <i class="ri-close-line" onclick="sys.cancelMedia()"></i>
+                <span>Enviar arquivo</span>
+            </div>
+            <div id="preview-content"></div>
+            <div class="preview-footer">
+                <button id="view-once-btn" onclick="sys.toggleViewOnce()">
+                    <i class="ri-record-circle-line"></i> Visualização Única: <span id="v-once-status">OFF</span>
+                </button>
+                <div class="send-row">
+                    <input type="text" id="media-caption" class="field" placeholder="Adicione uma legenda...">
+                    <button class="btn-circle" onclick="sys.sendMedia()"><i class="ri-send-plane-2-fill"></i></button>
                 </div>
-                <div class="chat-actions">
-                    <i class="ri-phone-fill" onclick="sys.call(false)"></i>
-                    <i class="ri-vidicon-fill" onclick="sys.call(true)"></i>
-                </div>
-            </header>
-            <div id="messages" class="chat-area"></div>
-            <div class="input-bar">
-                <label class="btn-attach"><i class="ri-attachment-2"></i><input type="file" id="file-input" hidden onchange="sys.sendFile()"></label>
-                <input type="text" id="msg-input" class="field" placeholder="Mensagem...">
-                <button class="btn-send" onclick="sys.send()"><i class="ri-send-plane-fill"></i></button>
             </div>
         </div>
 
-        <div id="call-ui" class="call-ui">
-            <video id="remote-video" autoplay playsinline></video>
-            <video id="local-video" autoplay muted playsinline></video>
-            <div class="voice-info">
-                <div class="voice-av-box"><div class="pulse"></div><img id="voice-img" src=""></div>
-                <h2 id="voice-name">Chamada</h2>
-            </div>
-            <div class="call-controls">
-                <button class="ctrl-btn" onclick="sys.toggleMic()"><i class="ri-mic-fill"></i></button>
-                <button class="ctrl-btn end-call" onclick="sys.endCall()"><i class="ri-phone-fill"></i></button>
-            </div>
+        <div class="input-bar">
+            <label for="file-input" class="icon-btn"><i class="ri-add-line"></i></label>
+            <input type="file" id="file-input" hidden accept="image/*,video/*" onchange="sys.handleFile(event)">
+            
+            <input type="text" id="msg-input" class="field" placeholder="Mensagem...">
+            
+            <button id="btn-audio" class="icon-btn" onmousedown="sys.startRec()" onmouseup="sys.stopRec()" ontouchstart="sys.startRec()" ontouchend="sys.stopRec()">
+                <i class="ri-mic-2-fill"></i>
+            </button>
+            <button id="btn-send" class="btn-circle hidden" onclick="sys.sendText()">
+                <i class="ri-send-plane-fill"></i>
+            </button>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <div id="call-ui" class="call-ui">
+        <video id="remote-video" autoplay playsinline></video>
+        <div class="voice-overlay">
+            <div class="avatar-pulse-container">
+                <div class="pulse-ring"></div>
+                <img id="call-img" src="" alt="">
+            </div>
+            <h2 id="call-name-ui">Usuário</h2>
+            <p id="call-status-ui">Conectando segura...</p>
+        </div>
+        <div class="call-controls">
+            <button class="ctrl-btn" id="mic-toggle" onclick="sys.toggleMic()"><i class="ri-mic-fill"></i></button>
+            <button class="ctrl-btn end-call" onclick="sys.endCall()"><i class="ri-phone-fill"></i></button>
+            <button class="ctrl-btn" id="speaker-toggle" onclick="sys.toggleSpeaker()"><i class="ri-volume-up-fill"></i></button>
+        </div>
+        <video id="local-video" autoplay muted playsinline class="mini-video hidden"></video>
+    </div>
+
+    <div id="view-me" class="view">
+        <header>
+            <i class="ri-arrow-left-s-line" onclick="sys.closeView('view-me')"></i>
+            <h3>Meu Perfil</h3>
+        </header>
+        <div class="profile-content">
+            <div class="avatar-edit" id="me-avatar-big"></div>
+            <input type="text" id="edit-name" class="field" placeholder="Nome">
+            <input type="text" id="edit-pic" class="field" placeholder="URL da Foto">
+            <button class="btn" onclick="sys.saveProfile()">SALVAR ALTERAÇÕES</button>
+            <button class="btn" style="background: #ff3b30; margin-top: 10px;" onclick="sys.logout()">LOGOUT</button>
+        </div>
+    </div>
+
+    <div id="view-add" class="view">
+        <header><i class="ri-close-line" onclick="sys.closeView('view-add')"></i><h3>Adicionar</h3></header>
+        <div style="padding: 20px;">
+            <input type="text" id="target-id" class="field" placeholder="ID do destinatário">
+            <button class="btn" style="margin-top: 15px;" onclick="sys.addContact()">CONECTAR</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
