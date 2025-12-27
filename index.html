@@ -3,196 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRIMSON | ULTRA-BLACK</title>
+    <title>CRIMSON | ENTERPRISE P2P</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #ff0000;
-            --primary-dark: #8b0000;
-            --bg-pure: #000000;
-            --bg-card: #121212;
-            --bg-input: #1a1a1a;
-            --text-main: #ffffff;
-            --text-dim: #888888;
-            --border: 1px solid #222;
+            --primary: #e61e1e;
+            --bg-body: #050505;
+            --bg-sidebar: #0f0f0f;
+            --bg-card: #18181b;
+            --bg-input: #27272a;
+            --text-main: #fafafa;
+            --text-muted: #a1a1aa;
+            --border: 1px solid #27272a;
+            --accent-glow: 0 0 15px rgba(230, 30, 30, 0.2);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        body { background: #000; color: var(--text-main); height: 100dvh; display: flex; justify-content: center; overflow: hidden; }
+        body { background: var(--bg-body); color: var(--text-main); height: 100dvh; display: flex; justify-content: center; overflow: hidden; }
 
+        /* --- CONTAINER PRINCIPAL ADAPTÁVEL --- */
         #app {
-            width: 100%; max-width: 500px; height: 100%;
-            background: var(--bg-pure); position: relative;
-            display: flex; flex-direction: column;
+            width: 100%; max-width: 1200px; height: 100dvh;
+            display: flex; background: var(--bg-sidebar);
+            position: relative; overflow: hidden;
         }
 
-        /* --- LOGIN --- */
-        .auth-screen {
-            position: absolute; inset: 0; z-index: 5000; background: #000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;
+        /* --- LOGIN (OVERLAY) --- */
+        .auth-overlay {
+            position: fixed; inset: 0; z-index: 9999; background: var(--bg-body);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
         }
-        .auth-logo { font-size: 60px; color: var(--primary); margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,0,0,0.5); }
-        .auth-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 12px; color: #fff; font-weight: 800; cursor: pointer; margin-top: 15px; }
+        .auth-card { width: 100%; max-width: 380px; text-align: center; }
+        .brand-logo { font-size: 50px; color: var(--primary); margin-bottom: 20px; text-shadow: var(--accent-glow); }
 
-        /* --- HEADER --- */
-        header {
-            padding: 15px 20px; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: var(--border); z-index: 100;
+        /* --- SIDEBAR (CONVERSAS) --- */
+        .sidebar {
+            width: 380px; flex-shrink: 0; display: flex; flex-direction: column;
+            border-right: var(--border); background: var(--bg-sidebar);
         }
-        .h-user { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        
+        .sidebar-header { padding: 20px; border-bottom: var(--border); }
+        .user-me { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; cursor: pointer; transition: 0.2s; }
+        .user-me:hover { opacity: 0.8; }
+
+        .search-wrapper {
+            background: var(--bg-input); border-radius: 10px; padding: 10px 15px;
+            display: flex; align-items: center; gap: 10px; border: 1px solid transparent;
+        }
+        .search-wrapper:focus-within { border-color: var(--primary); }
+        .search-wrapper input { background: transparent; border: none; color: #fff; outline: none; width: 100%; font-size: 14px; }
+
+        /* --- CHAT LIST --- */
+        .chat-list { flex: 1; overflow-y: auto; scrollbar-width: thin; }
+        .chat-tile {
+            padding: 16px 20px; display: flex; gap: 15px; align-items: center;
+            cursor: pointer; transition: 0.2s; border-bottom: 1px solid #1a1a1a;
+        }
+        .chat-tile:hover { background: var(--bg-card); }
+        .chat-tile.active { background: rgba(230, 30, 30, 0.05); border-left: 3px solid var(--primary); }
+
+        /* --- AVATAR SYSTEM --- */
         .avatar {
-            width: 42px; height: 42px; border-radius: 50%; background: var(--bg-card);
+            width: 48px; height: 48px; border-radius: 14px; background: var(--bg-input);
             display: flex; align-items: center; justify-content: center; font-weight: 700;
-            border: 2px solid var(--primary); color: var(--primary); overflow: hidden;
+            color: var(--primary); overflow: hidden; border: 1.5px solid #333; flex-shrink: 0;
         }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- LISTA DE CHATS --- */
-        .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item {
-            padding: 16px 20px; display: flex; gap: 15px; border-bottom: 1px solid #111;
-            transition: 0.2s; cursor: pointer; align-items: center;
+        .tile-body { flex: 1; min-width: 0; }
+        .tile-row { display: flex; justify-content: space-between; align-items: center; }
+        .tile-name { font-weight: 600; font-size: 15px; color: var(--text-main); }
+        .tile-meta { font-size: 12px; color: var(--text-muted); }
+        .tile-msg { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+        .badge { background: var(--primary); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; }
+
+        /* --- MAIN VIEW --- */
+        .main-view { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); }
+        .chat-header { padding: 14px 25px; border-bottom: var(--border); display: flex; align-items: center; justify-content: space-between; background: rgba(15,15,15,0.8); backdrop-filter: blur(10px); }
+        
+        .msg-scroll { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .bubble { max-width: 75%; padding: 12px 16px; border-radius: 16px; font-size: 14.5px; line-height: 1.5; position: relative; }
+        .bubble.me { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; box-shadow: 0 4px 12px rgba(230, 30, 30, 0.2); }
+        .bubble.them { align-self: flex-start; background: var(--bg-card); color: white; border-bottom-left-radius: 2px; border: var(--border); }
+        .msg-time { font-size: 10px; opacity: 0.7; display: block; margin-top: 6px; text-align: right; }
+
+        /* --- INPUT AREA --- */
+        .input-box { padding: 20px 25px; background: var(--bg-sidebar); display: flex; gap: 15px; align-items: center; }
+        .input-field { flex: 1; background: var(--bg-input); border: var(--border); padding: 12px 18px; border-radius: 12px; color: #fff; outline: none; transition: 0.2s; }
+        .input-field:focus { border-color: var(--primary); }
+        .send-btn { width: 45px; height: 45px; border-radius: 12px; background: var(--primary); border: none; color: white; cursor: pointer; transition: 0.2s; }
+        .send-btn:hover { transform: scale(1.05); }
+
+        /* --- MODALS --- */
+        .drawer {
+            position: absolute; inset: 0; background: var(--bg-body); z-index: 500;
+            transform: translateX(-100%); transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            padding: 40px 30px;
         }
-        .chat-item:active { background: #111; }
-        .chat-info { flex: 1; min-width: 0; }
-        .c-row { display: flex; justify-content: space-between; align-items: center; }
-        .c-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-        .c-msg { font-size: 14px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .c-time { font-size: 11px; color: var(--text-dim); }
-        .unread-badge { background: var(--primary); color: #fff; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; margin-top: 5px; }
+        .drawer.open { transform: translateX(0); }
+        .btn-full { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; margin-top: 10px; }
 
-        /* --- BOTÃO CONTATOS (ESTILO WHATSAPP) --- */
-        .fab {
-            position: absolute; bottom: 25px; right: 25px;
-            width: 60px; height: 60px; background: var(--primary);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 28px; color: #fff; cursor: pointer; box-shadow: 0 5px 15px rgba(255,0,0,0.4);
-            z-index: 90;
+        /* --- FAB --- */
+        .fab { position: absolute; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--primary); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 8px 20px rgba(230, 30, 30, 0.4); cursor: pointer; z-index: 100; transition: 0.3s; }
+        .fab:hover { transform: translateY(-3px); }
+
+        /* --- RESPONSIVIDADE --- */
+        @media (max-width: 850px) {
+            .sidebar { width: 100%; }
+            .main-view { position: absolute; inset: 0; z-index: 400; transform: translateX(100%); transition: 0.3s ease; }
+            .main-view.active { transform: translateX(0); }
         }
-
-        /* --- TELA DE CHAT --- */
-        .chat-view {
-            position: absolute; inset: 0; background: #000; z-index: 200;
-            display: flex; flex-direction: column; transform: translateX(100%);
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .chat-view.active { transform: translateX(0); }
-
-        .msg-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-        .bubble { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.4; position: relative; }
-        .sent { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
-        .received { align-self: flex-start; background: var(--bg-card); color: #fff; border-bottom-left-radius: 4px; border: var(--border); }
-        .b-time { font-size: 10px; opacity: 0.6; display: block; text-align: right; margin-top: 4px; }
-
-        /* --- MODAL DE CONTATOS / PERFIL --- */
-        .full-modal {
-            position: absolute; inset: 0; background: #000; z-index: 1000;
-            display: none; flex-direction: column;
-        }
-        .full-modal.active { display: flex; }
-        .modal-header { padding: 20px; border-bottom: var(--border); display: flex; align-items: center; gap: 20px; }
-        .input-dark { width: 100%; padding: 15px; background: var(--bg-input); border: var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 15px; }
-
-        .contact-row { padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #111; cursor: pointer; }
-
-        .input-bar { padding: 15px; background: #000; display: flex; gap: 12px; border-top: var(--border); }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <div id="screen-auth" class="auth-screen">
-        <i class="ri-fire-fill auth-logo"></i>
-        <h1 style="font-weight: 800; letter-spacing: -1px;">CRIMSON PROTOCOL</h1>
-        <p style="color: var(--text-dim); margin-bottom: 30px;">Professional Secure Messaging</p>
-        <input type="text" id="my-id" class="input-dark" placeholder="Nickname">
-        <button class="auth-btn" onclick="ctrl.login()">ENTRAR</button>
+    <div id="auth-screen" class="auth-overlay">
+        <div class="auth-card">
+            <i class="ri-shield-keyhole-fill brand-logo"></i>
+            <h1 style="margin-bottom: 30px; font-weight: 800;">CRIMSON WORK</h1>
+            <input type="text" id="my-id" class="input-field" style="width:100%; margin-bottom: 15px;" placeholder="Seu ID Único">
+            <button class="btn-full" style="background: var(--primary); color: white;" onclick="core.login()">ACESSAR WORKSPACE</button>
+        </div>
     </div>
 
-    <header>
-        <div class="h-user" onclick="ctrl.toggleModal('modal-profile', true)">
-            <div class="avatar" id="my-avatar-top">?</div>
-            <div>
-                <div id="my-name-top" style="font-weight: 800; font-size: 15px;">User</div>
-                <div style="font-size: 10px; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Online</div>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="user-me" onclick="core.toggleDrawer('profile-drawer', true)">
+                <div class="avatar" id="my-av-side">?</div>
+                <div style="flex:1">
+                    <div id="my-name-side" style="font-weight: 700;">Carregando...</div>
+                    <div style="font-size: 11px; color: var(--primary); font-weight: 600;">STATUS: ONLINE</div>
+                </div>
+                <i class="ri-settings-3-line" style="font-size: 20px; color: var(--text-muted);"></i>
+            </div>
+            <div class="search-wrapper">
+                <i class="ri-search-2-line" style="color: var(--text-muted);"></i>
+                <input type="text" placeholder="Pesquisar mensagens...">
             </div>
         </div>
-        <i class="ri-more-2-fill" style="font-size: 24px; color: var(--text-dim);"></i>
-    </header>
-
-    <div id="main-chat-list" class="chat-list">
-        </div>
-
-    <div class="fab" onclick="ctrl.toggleModal('modal-contacts', true)">
-        <i class="ri-message-3-line"></i>
+        <div id="chat-list" class="chat-list"></div>
     </div>
 
-    <div id="chat-view" class="chat-view">
-        <header>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <i class="ri-arrow-left-line" onclick="ctrl.closeChat()" style="font-size: 24px;"></i>
-                <div class="avatar" id="active-avatar" style="width: 36px; height: 36px;"></div>
-                <div id="active-name" style="font-weight: 700;">Nome</div>
+    <div id="main-chat" class="main-view">
+        <div id="empty-state" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-muted);">
+            <i class="ri-message-3-line" style="font-size: 60px; margin-bottom: 15px; opacity: 0.2;"></i>
+            <p>Selecione um contato para iniciar</p>
+        </div>
+
+        <div id="chat-container" style="display:none; flex:1; flex-direction:column;">
+            <div class="chat-header">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <i class="ri-arrow-left-s-line" style="font-size: 28px; cursor:pointer;" onclick="core.closeChat()"></i>
+                    <div class="avatar" id="active-av" style="width:38px; height:38px;"></div>
+                    <div>
+                        <div id="active-name" style="font-weight: 700; font-size: 15px;">Nome</div>
+                        <div style="font-size: 11px; color: #22c55e;">Conectado</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:20px; font-size: 20px; color: var(--text-muted);">
+                    <i class="ri-phone-line"></i>
+                    <i class="ri-vidicon-line"></i>
+                </div>
             </div>
-        </header>
-        <div id="msg-flow" class="msg-area"></div>
-        <div class="input-bar">
-            <input type="text" id="msg-input" class="input-dark" style="margin:0;" placeholder="Mensagem...">
-            <button class="avatar" style="background: var(--primary); border:none; color:#fff;" onclick="ctrl.send()">
-                <i class="ri-send-plane-fill"></i>
-            </button>
-        </div>
-    </div>
-
-    <div id="modal-contacts" class="full-modal">
-        <div class="modal-header">
-            <i class="ri-arrow-left-line" onclick="ctrl.toggleModal('modal-contacts', false)"></i>
-            <h2 style="font-weight: 800;">Contatos</h2>
-        </div>
-        <div style="padding: 20px;">
-            <input type="text" id="new-friend-id" class="input-dark" placeholder="ID do amigo...">
-            <button class="auth-btn" style="margin:0;" onclick="ctrl.addFriend()">ADICIONAR AMIGO</button>
-        </div>
-        <div id="contacts-list" style="flex: 1; overflow-y: auto;">
+            <div id="msg-scroll" class="msg-scroll"></div>
+            <div class="input-box">
+                <input type="text" id="msg-input" class="input-field" placeholder="Escreva uma mensagem segura...">
+                <button class="send-btn" onclick="core.send()"><i class="ri-send-plane-2-fill"></i></button>
             </div>
+        </div>
     </div>
 
-    <div id="modal-profile" class="full-modal">
-        <div class="modal-header">
-            <i class="ri-arrow-left-line" onclick="ctrl.toggleModal('modal-profile', false)"></i>
-            <h2 style="font-weight: 800;">Meu Perfil</h2>
+    <div id="profile-drawer" class="drawer">
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:40px;">
+            <i class="ri-close-line" style="font-size:30px; cursor:pointer;" onclick="core.toggleDrawer('profile-drawer', false)"></i>
+            <h2 style="font-weight: 800;">Configurações</h2>
         </div>
-        <div style="padding: 30px; display: flex; flex-direction: column; align-items: center;">
-            <div class="avatar" id="prof-preview" style="width: 120px; height: 120px; font-size: 40px; margin-bottom: 20px;">?</div>
-            <input type="text" id="set-name" class="input-dark" placeholder="Nome de Exibição">
-            <input type="text" id="set-pic" class="input-dark" placeholder="URL da Foto">
-            <button class="auth-btn" onclick="ctrl.saveProfile()">SALVAR</button>
-            <button class="auth-btn" style="background: #111; margin-top: 10px;" onclick="ctrl.logout()">LOGOUT</button>
+        <div style="text-align: center;">
+            <div class="avatar" id="prof-preview" style="width: 120px; height: 120px; margin: 0 auto 30px; font-size: 40px; border-radius: 30px;">?</div>
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin-left: 5px;">NOME PROFISSIONAL</label>
+                <input type="text" id="set-name" class="input-field" style="width:100%; margin-top:8px;" placeholder="Ex: João Silva">
+            </div>
+            <div style="text-align: left; margin-bottom: 30px;">
+                <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin-left: 5px;">URL DA FOTO DE PERFIL</label>
+                <input type="text" id="set-pic" class="input-field" style="width:100%; margin-top:8px;" placeholder="https://...">
+            </div>
+            <button class="btn-full" style="background: var(--primary); color: white;" onclick="core.saveProfile()">ATUALIZAR PERFIL</button>
+            <button class="btn-full" style="background: var(--bg-input); color: #ef4444; margin-top: 15px;" onclick="core.logout()">LOGOUT</button>
         </div>
     </div>
+
+    <div class="fab" onclick="core.newChat()"><i class="ri-user-add-line"></i></div>
 </div>
 
 <script>
-const ctrl = {
+const core = {
     peer: null,
-    uid: localStorage.getItem('cr_id'),
-    profile: JSON.parse(localStorage.getItem('cr_prof') || '{"name":"","pic":""}'),
-    friends: JSON.parse(localStorage.getItem('cr_friends') || '[]'),
-    history: JSON.parse(localStorage.getItem('cr_history') || '{}'),
+    uid: localStorage.getItem('c_uid'),
+    prof: JSON.parse(localStorage.getItem('c_prof') || '{"name":"","pic":""}'),
+    friends: JSON.parse(localStorage.getItem('c_friends') || '{}'),
+    history: JSON.parse(localStorage.getItem('c_history') || '{}'),
     unread: {},
     activeId: null,
 
     init() {
         if(this.uid) {
-            document.getElementById('screen-auth').style.display = 'none';
-            this.setupNetwork();
-            this.updateUI();
+            document.getElementById('auth-screen').style.display = 'none';
+            this.setupP2P();
+            this.updateProfileUI();
             this.renderHome();
         }
         document.getElementById('msg-input').onkeydown = (e) => e.key === 'Enter' && this.send();
@@ -200,20 +224,30 @@ const ctrl = {
 
     login() {
         const id = document.getElementById('my-id').value.trim().toLowerCase();
-        if(id.length < 3) return;
-        localStorage.setItem('cr_id', id);
+        if(id.length < 3) return alert("ID muito curto");
+        localStorage.setItem('c_uid', id);
         location.reload();
     },
 
-    setupNetwork() {
+    setupP2P() {
         this.peer = new Peer(this.uid);
         this.peer.on('connection', conn => {
-            conn.on('data', data => this.onMsg(conn.peer, data));
+            conn.on('open', () => this.syncProfile(conn));
+            conn.on('data', data => this.handleData(conn.peer, data, conn));
         });
     },
 
-    onMsg(sid, data) {
-        if(data.type === 'chat') {
+    syncProfile(conn) {
+        conn.send({ type: 'SYNC_PROF', name: this.prof.name || this.uid, pic: this.prof.pic });
+    },
+
+    handleData(sid, data, conn) {
+        if(data.type === 'SYNC_PROF') {
+            this.friends[sid] = { name: data.name, pic: data.pic };
+            this.save(); this.renderHome();
+            if(this.activeId === sid) this.renderHeader(sid);
+        }
+        if(data.type === 'MSG') {
             if(!this.history[sid]) this.history[sid] = [];
             this.history[sid].push({ sid, text: data.text, time: data.time });
             
@@ -222,147 +256,130 @@ const ctrl = {
             } else {
                 this.renderChat();
             }
-            
-            if(!this.friends.includes(sid)) this.friends.push(sid);
-            this.save();
-            this.renderHome();
+            this.save(); this.renderHome();
+            this.syncProfile(conn);
         }
     },
 
     renderHome() {
-        const list = document.getElementById('main-chat-list');
+        const list = document.getElementById('chat-list');
         list.innerHTML = "";
-        
-        // Só mostra na Home quem tem conversa
-        const activeChats = Object.keys(this.history).sort((a,b) => {
-            const tA = this.history[a].at(-1)?.time || "";
-            const tB = this.history[b].at(-1)?.time || "";
-            return tB.localeCompare(tA);
-        });
+        const ids = Object.keys(this.history).sort((a,b) => (this.history[b].at(-1)?.time || "").localeCompare(this.history[a].at(-1)?.time || ""));
 
-        activeChats.forEach(id => {
+        ids.forEach(id => {
             const last = this.history[id].at(-1);
+            const f = this.friends[id] || { name: id, pic: '' };
             const count = this.unread[id] || 0;
+            const active = this.activeId === id ? 'active' : '';
+
             list.innerHTML += `
-                <div class="chat-item" onclick="ctrl.openChat('${id}')">
-                    <div class="avatar">${id[0].toUpperCase()}</div>
-                    <div class="chat-info">
-                        <div class="c-row">
-                            <span class="c-name">${id}</span>
-                            <span class="c-time">${last ? last.time : ''}</span>
+                <div class="chat-tile ${active}" onclick="core.openChat('${id}')">
+                    <div class="avatar">${f.pic ? `<img src="${f.pic}">` : id[0].toUpperCase()}</div>
+                    <div class="tile-body">
+                        <div class="tile-row">
+                            <span class="tile-name">${f.name || id}</span>
+                            <span class="tile-meta">${last ? last.time : ''}</span>
                         </div>
-                        <div class="c-row">
-                            <span class="c-msg">${last ? last.text : ''}</span>
-                            ${count > 0 ? `<div class="unread-badge">${count}</div>` : ''}
+                        <div class="tile-row">
+                            <span class="tile-msg">${last ? last.text : 'Nova conexão...'}</span>
+                            ${count > 0 ? `<span class="badge">${count}</span>` : ''}
                         </div>
                     </div>
-                </div>
-            `;
-        });
-    },
-
-    renderFriends() {
-        const list = document.getElementById('contacts-list');
-        list.innerHTML = "";
-        this.friends.forEach(id => {
-            list.innerHTML += `
-                <div class="contact-row" onclick="ctrl.openChat('${id}')">
-                    <div class="avatar" style="width:36px; height:36px;">${id[0].toUpperCase()}</div>
-                    <span style="font-weight:700;">${id}</span>
-                </div>
-            `;
+                </div>`;
         });
     },
 
     openChat(id) {
         this.activeId = id;
         this.unread[id] = 0;
-        document.getElementById('active-name').innerText = id;
-        document.getElementById('active-avatar').innerText = id[0].toUpperCase();
-        document.getElementById('chat-view').classList.add('active');
-        this.toggleModal('modal-contacts', false);
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('chat-container').style.display = 'flex';
+        document.getElementById('main-chat').classList.add('active');
+        this.renderHeader(id);
         this.renderChat();
         this.renderHome();
+        
+        const conn = this.peer.connect(id);
+        conn.on('open', () => this.syncProfile(conn));
+    },
+
+    renderHeader(id) {
+        const f = this.friends[id] || { name: id, pic: '' };
+        document.getElementById('active-name').innerText = f.name || id;
+        document.getElementById('active-av').innerHTML = f.pic ? `<img src="${f.pic}">` : id[0].toUpperCase();
     },
 
     renderChat() {
-        const flow = document.getElementById('msg-flow');
-        flow.innerHTML = "";
+        const scroll = document.getElementById('msg-scroll');
+        scroll.innerHTML = "";
         (this.history[this.activeId] || []).forEach(m => {
             const isMe = m.sid === this.uid;
-            flow.innerHTML += `
-                <div class="bubble ${isMe ? 'sent' : 'received'}">
+            scroll.innerHTML += `
+                <div class="bubble ${isMe ? 'me' : 'them'}">
                     ${m.text}
-                    <span class="b-time">${m.time}</span>
-                </div>
-            `;
+                    <span class="msg-time">${m.time}</span>
+                </div>`;
         });
-        flow.scrollTop = flow.scrollHeight;
+        scroll.scrollTop = scroll.scrollHeight;
     },
 
     send() {
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
         if(!text) return;
-
         const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        
         if(!this.history[this.activeId]) this.history[this.activeId] = [];
         this.history[this.activeId].push({ sid: this.uid, text, time });
 
         const conn = this.peer.connect(this.activeId);
-        conn.on('open', () => conn.send({ type: 'chat', text, time }));
+        conn.on('open', () => {
+            conn.send({ type: 'MSG', text, time });
+            this.syncProfile(conn);
+        });
 
         input.value = "";
-        this.renderChat();
-        this.save();
-        this.renderHome();
-    },
-
-    addFriend() {
-        const id = document.getElementById('new-friend-id').value.trim().toLowerCase();
-        if(id && id !== this.uid && !this.friends.includes(id)) {
-            this.friends.push(id);
-            this.save();
-            this.renderFriends();
-            document.getElementById('new-friend-id').value = "";
-        }
-    },
-
-    toggleModal(mid, show) {
-        document.getElementById(mid).classList.toggle('active', show);
-        if(mid === 'modal-contacts' && show) this.renderFriends();
+        this.renderChat(); this.save(); this.renderHome();
     },
 
     saveProfile() {
-        this.profile.name = document.getElementById('set-name').value;
-        this.profile.pic = document.getElementById('set-pic').value;
-        localStorage.setItem('cr_prof', JSON.stringify(this.profile));
-        this.updateUI();
-        this.toggleModal('modal-profile', false);
+        this.prof.name = document.getElementById('set-name').value;
+        this.prof.pic = document.getElementById('set-pic').value;
+        localStorage.setItem('c_prof', JSON.stringify(this.prof));
+        this.updateProfileUI();
+        this.toggleDrawer('profile-drawer', false);
     },
 
-    updateUI() {
-        document.getElementById('my-name-top').innerText = this.profile.name || this.uid;
-        const av = document.getElementById('my-avatar-top');
-        const pr = document.getElementById('prof-preview');
-        if(this.profile.pic) {
-            const img = `<img src="${this.profile.pic}">`;
-            av.innerHTML = img; pr.innerHTML = img;
-        } else {
-            av.innerText = this.uid[0].toUpperCase();
-            pr.innerText = this.uid[0].toUpperCase();
+    updateProfileUI() {
+        document.getElementById('my-name-side').innerText = this.prof.name || this.uid;
+        const pic = this.prof.pic ? `<img src="${this.prof.pic}">` : this.uid[0].toUpperCase();
+        document.getElementById('my-av-side').innerHTML = pic;
+        document.getElementById('prof-preview').innerHTML = pic;
+    },
+
+    newChat() {
+        const id = prompt("Digite o ID Único do destinatário:");
+        if(id && id.toLowerCase() !== this.uid) {
+            if(!this.history[id.toLowerCase()]) this.history[id.toLowerCase()] = [];
+            this.openChat(id.toLowerCase());
         }
     },
 
-    closeChat() { this.activeId = null; document.getElementById('chat-view').classList.remove('active'); },
-    save() { 
-        localStorage.setItem('cr_friends', JSON.stringify(this.friends)); 
-        localStorage.setItem('cr_history', JSON.stringify(this.history)); 
+    closeChat() {
+        this.activeId = null;
+        document.getElementById('main-chat').classList.remove('active');
+        this.renderHome();
+    },
+
+    toggleDrawer(id, show) { document.getElementById(id).classList.toggle('open', show); },
+    save() {
+        localStorage.setItem('c_friends', JSON.stringify(this.friends));
+        localStorage.setItem('c_history', JSON.stringify(this.history));
     },
     logout() { localStorage.clear(); location.reload(); }
 };
 
-ctrl.init();
+core.init();
 </script>
 </body>
 </html>
