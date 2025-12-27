@@ -3,372 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRISÁLIDA | GAMER OS</title>
+    <title>Crimson Elite | Messaging Platform</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-main: #050505;
-            --bg-side: #0d0d0f;
-            --bg-panel: #121214;
-            --accent: #00ff9d; /* Verde Gamer */
-            --purple: #8a2be2;
-            --text-primary: #e0e0e0;
-            --text-dim: #71717a;
-            --border: rgba(255, 255, 255, 0.05);
-            --msg-sent: #054640;
-            --msg-received: #202024;
+            --primary: #d32f2f; /* Vermelho Profissional */
+            --primary-dark: #b71c1c;
+            --bg-deep: #0a0a0b;
+            --bg-card: #141417;
+            --bg-panel: #1c1c21;
+            --text-main: #f5f5f7;
+            --text-dim: #a0a0ab;
+            --border: rgba(255, 255, 255, 0.08);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg-main); color: var(--text-primary); height: 100dvh; display: flex; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-deep); color: var(--text-main); height: 100dvh; display: flex; overflow: hidden; }
 
-        /* --- AUTH SCREEN --- */
-        #auth-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .auth-card { width: 100%; max-width: 380px; background: var(--bg-side); padding: 40px; border-radius: 24px; border: 1px solid var(--accent); text-align: center; box-shadow: 0 0 30px rgba(0, 255, 157, 0.1); }
-        .auth-card h1 { font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--accent); margin-bottom: 20px; letter-spacing: -1px; }
+        /* --- TELAS --- */
+        .screen { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--bg-deep); z-index: 10; }
+        .active-screen { display: flex; }
 
-        /* --- LAYOUT WHATSAPP STYLE --- */
-        #app-container { display: flex; width: 100%; height: 100%; }
-
-        /* SIDEBAR (LISTA DE CHATS) */
-        #sidebar { width: 400px; min-width: 320px; background: var(--bg-side); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: 0.3s; }
-        .sidebar-header { height: 64px; padding: 10px 16px; background: var(--bg-side); display: flex; align-items: center; justify-content: space-between; }
-        .my-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); cursor: pointer; }
+        /* --- COMPONENTES GLOBAIS --- */
+        header { height: 64px; background: var(--bg-card); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); gap: 15px; }
+        .btn-icon { background: none; border: none; color: var(--text-main); cursor: pointer; font-size: 20px; padding: 10px; border-radius: 50%; transition: 0.2s; }
+        .btn-icon:hover { background: rgba(255,255,255,0.05); }
         
-        .search-area { padding: 8px 14px; border-bottom: 1px solid var(--border); }
-        .search-box { width: 100%; padding: 10px 16px; background: var(--bg-panel); border: none; border-radius: 8px; color: white; outline: none; font-size: 14px; }
+        .input-group { padding: 15px; background: var(--bg-deep); }
+        .input-field { width: 100%; padding: 12px 16px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; color: white; outline: none; }
+        .input-field:focus { border-color: var(--primary); }
 
-        .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 12px 16px; display: flex; align-items: center; gap: 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .chat-item:hover { background: var(--bg-panel); }
-        .chat-item.active { background: #2a2a2e; }
-        .chat-item .avatar { width: 50px; height: 50px; border-radius: 50%; background: #2a2a2e; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .chat-item .info { flex: 1; min-width: 0; }
-        .chat-item .info .top { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .chat-item .info h4 { font-size: 16px; font-weight: 500; }
-        .chat-item .info p { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* --- DASHBOARD & LISTAS --- */
+        .list-container { flex: 1; overflow-y: auto; }
+        .item-row { padding: 14px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; border-bottom: 1px solid var(--border); transition: 0.2s; }
+        .item-row:hover { background: rgba(255,255,255,0.02); }
+        .avatar { width: 48px; height: 48px; border-radius: 14px; object-fit: cover; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; border: 1px solid var(--border); }
+        .item-body { flex: 1; min-width: 0; }
+        .item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .item-name { font-weight: 600; font-size: 15px; }
+        .item-sub { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* MAIN CHAT AREA */
-        #main-content { flex: 1; display: flex; flex-direction: column; background: #0b0b0d; background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 20px 20px; }
-        .chat-header { height: 64px; padding: 10px 16px; background: var(--bg-side); display: flex; align-items: center; border-bottom: 1px solid var(--border); z-index: 10; }
-        
-        #messages-flow { flex: 1; overflow-y: auto; padding: 20px 5%; display: flex; flex-direction: column; gap: 4px; }
-        
-        /* BUBBLES */
-        .bubble { max-width: 65%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
-        .sent { align-self: flex-end; background: var(--msg-sent); border-top-right-radius: 0; }
-        .received { align-self: flex-start; background: var(--msg-received); border-top-left-radius: 0; }
-        .bubble-meta { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px; }
-        .tick-blue { color: #53bdeb; }
+        /* --- BOTÃO FLUTUANTE (ESTILO WHATSAPP) --- */
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(211, 47, 47, 0.4); border: none; color: white; font-size: 24px; cursor: pointer; z-index: 100; transition: 0.3s; }
+        .fab:hover { transform: scale(1.05); background: var(--primary-dark); }
 
-        /* INPUT AREA */
-        .input-bar { min-height: 62px; padding: 10px 16px; background: var(--bg-side); display: flex; align-items: center; gap: 12px; }
-        .text-input { flex: 1; padding: 12px 16px; background: var(--bg-panel); border: none; border-radius: 8px; color: white; outline: none; font-size: 15px; }
+        /* --- CHAT VIEW --- */
+        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; background: #080809; }
+        .msg { max-width: 75%; padding: 10px 14px; border-radius: 14px; font-size: 14.5px; position: relative; line-height: 1.4; }
+        .sent { align-self: flex-end; background: var(--primary); border-bottom-right-radius: 2px; }
+        .received { align-self: flex-start; background: var(--bg-panel); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
+        .msg-meta { display: flex; justify-content: flex-end; gap: 4px; font-size: 10px; opacity: 0.7; margin-top: 4px; }
+        .tick-red { color: #ff8a80; font-weight: bold; }
 
-        /* PROFILE MODAL */
-        #profile-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: none; align-items: center; justify-content: center; }
-        
-        /* RESPONSIVIDADE */
-        @media (max-width: 768px) {
-            #sidebar { width: 100%; min-width: 100%; position: absolute; z-index: 50; }
-            #sidebar.hidden { transform: translateX(-100%); }
-            .bubble { max-width: 85%; }
-        }
+        /* --- AUTH --- */
+        #auth-screen { z-index: 1000; justify-content: center; align-items: center; padding: 25px; }
+        .card { width: 100%; max-width: 380px; background: var(--bg-card); padding: 40px; border-radius: 24px; border: 1px solid var(--border); text-align: center; }
 
         .hidden { display: none !important; }
-        .btn-icon { background: none; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; padding: 8px; }
-        .btn-icon:hover { color: var(--accent); }
     </style>
 </head>
 <body>
 
-<div id="auth-screen">
-    <div class="auth-card">
-        <h1>CRISÁLIDA_OS</h1>
-        <input type="text" id="login-id" class="search-box" placeholder="DIGITE SEU NICKNAME" style="margin-bottom: 15px; text-align: center; border: 1px solid var(--border);">
-        <button onclick="doLogin()" style="width: 100%; padding: 12px; background: var(--accent); border: none; border-radius: 8px; font-weight: 800; cursor: pointer; color: black;">BOOT SYSTEM</button>
-    </div>
-</div>
-
-<div id="profile-modal">
-    <div class="auth-card">
-        <h2 style="color: var(--accent); margin-bottom: 20px;">PERFIL DO USUÁRIO</h2>
-        <input type="text" id="p-img" class="search-box" placeholder="URL DA FOTO">
-        <input type="text" id="p-status" class="search-box" placeholder="RECADO" style="margin-top:10px;">
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="saveProfile()" style="flex:1; padding:10px; background:var(--accent); border:none; border-radius:8px; font-weight:700; cursor:pointer;">SALVAR</button>
-            <button onclick="closeProfile()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:8px; font-weight:700; cursor:pointer;">FECHAR</button>
+    <div id="auth-screen" class="screen active-screen">
+        <div class="card">
+            <h1 style="color: var(--primary); margin-bottom: 10px;">Crimson</h1>
+            <p style="color: var(--text-dim); margin-bottom: 30px; font-size: 14px;">Plataforma de Comunicação Segura</p>
+            <input type="text" id="login-id" class="input-field" placeholder="Seu nickname..." style="margin-bottom: 15px;">
+            <button onclick="auth()" class="input-field" style="background: var(--primary); border: none; font-weight: 700; cursor: pointer;">ACESSAR CONTA</button>
         </div>
     </div>
-</div>
 
-<div id="app-container">
-    <aside id="sidebar">
-        <div class="sidebar-header">
-            <img id="my-avatar" src="https://ui-avatars.com/api/?background=202024&color=fff&name=?" class="my-avatar" onclick="openProfile()">
-            <div style="display:flex;">
-                <button class="btn-icon" onclick="copyMyLink()">🔗</button>
-                <button class="btn-icon" onclick="doLogout()">🚪</button>
-            </div>
-        </div>
-        
-        <div class="search-area">
-            <input type="text" id="add-friend-input" class="search-box" placeholder="Procurar ou começar conversa..." onkeyup="if(event.key==='Enter') addFriend()">
-        </div>
-
-        <div id="chat-list" class="chat-list">
-            </div>
-    </aside>
-
-    <main id="main-content">
-        <header class="chat-header">
-            <button id="back-btn" class="btn-icon hidden" onclick="toggleSidebar(true)">←</button>
-            <div id="active-info" style="display:flex; align-items:center; gap:12px; margin-left:10px;">
-                <div id="active-avatar-circle" class="avatar" style="width:40px; height:40px; font-size:14px; background: #202024; border-radius: 50%; display: flex; align-items:center; justify-content:center;">?</div>
-                <div>
-                    <h4 id="active-nick">Selecione uma conversa</h4>
-                    <p id="active-status" style="font-size:12px; color:var(--text-dim);">Clique em um contato para iniciar</p>
-                </div>
-            </div>
+    <div id="dash-screen" class="screen">
+        <header>
+            <img id="my-avatar-img" class="avatar" style="width:36px; height:36px; cursor:pointer;" onclick="showScreen('profile-screen')">
+            <h3 style="flex:1">Conversas</h3>
+            <button class="btn-icon" onclick="logout()">🚪</button>
         </header>
+        <div id="chats-list" class="list-container"></div>
+        <button class="fab" onclick="showScreen('friends-screen')">👤</button>
+    </div>
 
-        <div id="messages-flow">
+    <div id="friends-screen" class="screen">
+        <header>
+            <button class="btn-icon" onclick="showScreen('dash-screen')">←</button>
+            <h3 style="flex:1">Meus Amigos</h3>
+        </header>
+        <div class="input-group">
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="new-friend-id" class="input-field" placeholder="Nickname do amigo...">
+                <button onclick="addFriend()" class="input-field" style="width:auto; background:var(--primary); border:none; padding:0 20px;">Adicionar</button>
             </div>
-
-        <div class="input-bar hidden" id="chat-input-area">
-            <button class="btn-icon">😊</button>
-            <input type="text" id="main-input" class="text-input" placeholder="Mensagem" onkeydown="if(event.key==='Enter') send()">
-            <button class="btn-icon" onclick="send()" style="color:var(--accent)">➤</button>
         </div>
-    </main>
-</div>
+        <div id="friends-list" class="list-container"></div>
+    </div>
 
-<script>
-    let peer, myId, activePeer = null;
-    let connections = {};
-    let db = {
-        me: JSON.parse(localStorage.getItem('cris_me_v5') || '{"img":"","status":"Disponível"}'),
-        history: JSON.parse(localStorage.getItem('cris_history_v5') || '{}'),
-        friends: JSON.parse(localStorage.getItem('cris_friends_v5') || '{}')
-    };
+    <div id="chat-screen" class="screen">
+        <header>
+            <button class="btn-icon" onclick="showScreen('dash-screen')">←</button>
+            <div style="flex:1">
+                <h4 id="active-name">Nome</h4>
+                <p id="active-status" style="font-size:11px; color:var(--text-dim);">Offline</p>
+            </div>
+            <button class="btn-icon" style="color:var(--primary)">📞</button>
+        </header>
+        <div id="chat-flow"></div>
+        <div class="input-group" style="display:flex; gap:10px; background:var(--bg-card);">
+            <input type="text" id="chat-input" class="input-field" placeholder="Escreva..." onkeydown="if(event.key==='Enter') send()">
+            <button onclick="send()" class="btn-icon" style="color:var(--primary)">🚀</button>
+        </div>
+    </div>
 
-    // --- BOOT ---
-    function doLogin() {
-        const id = document.getElementById('login-id').value.trim().toLowerCase();
-        if(!id) return;
-        localStorage.setItem('cris_user_v5', id);
-        location.reload();
-    }
+    <div id="profile-screen" class="screen">
+        <header>
+            <button class="btn-icon" onclick="showScreen('dash-screen')">←</button>
+            <h3>Meu Perfil</h3>
+        </header>
+        <div style="padding: 30px; text-align:center;">
+            <div id="p-avatar-box" class="avatar" style="width:100px; height:100px; margin:0 auto 20px; font-size:32px;"></div>
+            <input type="text" id="p-img-url" class="input-field" placeholder="URL da foto..." style="margin-bottom:15px;">
+            <input type="text" id="p-bio" class="input-field" placeholder="Sua bio..." style="margin-bottom:20px;">
+            <button onclick="saveProfile()" class="input-field" style="background:var(--primary); border:none; font-weight:700;">SALVAR ALTERAÇÕES</button>
+        </div>
+    </div>
 
-    function doLogout() { localStorage.removeItem('cris_user_v5'); location.reload(); }
-
-    window.onload = () => {
-        myId = localStorage.getItem('cris_user_v5');
-        if(myId) {
-            document.getElementById('auth-screen').classList.add('hidden');
-            initPeer();
-            updateMyUI();
-        }
-    };
-
-    function initPeer() {
-        peer = new Peer(myId, { debug: 1 });
-        peer.on('open', () => {
-            renderChatList();
-            checkUrlParams();
-            // Tenta conectar com todos do histórico para sync
-            Object.keys(db.history).forEach(id => connectTo(id));
-        });
-        peer.on('connection', conn => handleConn(conn));
-    }
-
-    // --- LOGICA DE CONEXÃO ---
-    function connectTo(id) {
-        if(connections[id]) return;
-        handleConn(peer.connect(id));
-    }
-
-    function handleConn(conn) {
-        connections[conn.peer] = conn;
-        conn.on('open', () => {
-            conn.send({type: 'profile', data: db.me});
-            syncPending(conn);
-            if(activePeer === conn.peer) document.getElementById('active-status').innerText = "Online";
-            renderChatList();
-        });
-        conn.on('data', data => {
-            if(data.type === 'msg') {
-                receiveMsg(conn.peer, data);
-                conn.send({type: 'ack', id: data.id});
-            } else if(data.type === 'ack') {
-                updateTick(conn.peer, data.id);
-            } else if(data.type === 'profile') {
-                db.friends[conn.peer] = data.data;
-                save(); renderChatList();
-                if(activePeer === conn.peer) updateHeader(conn.peer);
-            }
-        });
-        conn.on('close', () => {
-            delete connections[conn.peer];
-            if(activePeer === conn.peer) document.getElementById('active-status').innerText = "Offline";
-            renderChatList();
-        });
-    }
-
-    // --- MENSAGENS ---
-    function send() {
-        const input = document.getElementById('main-input');
-        const text = input.value.trim();
-        if(!text || !activePeer) return;
-
-        const msg = {
-            id: Date.now() + Math.random(),
-            type: 'msg',
-            from: myId,
-            text: text,
-            time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            read: false
+    <script>
+        let peer, myId, activePeer = null, conns = {};
+        let db = {
+            me: JSON.parse(localStorage.getItem('cr_me') || '{"img":"","bio":"Disponível"}'),
+            friends: JSON.parse(localStorage.getItem('cr_friends') || '[]'),
+            history: JSON.parse(localStorage.getItem('cr_history') || '{}')
         };
 
-        if(!db.history[activePeer]) db.history[activePeer] = [];
-        db.history[activePeer].push(msg);
-        
-        const c = connections[activePeer];
-        if(c && c.open) c.send(msg); else connectTo(activePeer);
-
-        input.value = "";
-        save(); renderMessages(); renderChatList();
-    }
-
-    function receiveMsg(from, msg) {
-        if(!db.history[from]) db.history[from] = [];
-        if(!db.history[from].find(m => m.id === msg.id)) {
-            db.history[from].push({...msg, read: true});
-            save();
-            if(activePeer === from) renderMessages();
-            renderChatList();
+        function auth() {
+            const id = document.getElementById('login-id').value.trim().toLowerCase();
+            if(!id) return;
+            localStorage.setItem('cr_user', id);
+            location.reload();
         }
-    }
 
-    function syncPending(conn) {
-        const p = (db.history[conn.peer] || []).filter(m => m.from === myId && !m.read);
-        p.forEach(m => conn.send(m));
-    }
+        function logout() { localStorage.removeItem('cr_user'); location.reload(); }
 
-    function updateTick(from, id) {
-        const m = db.history[from]?.find(x => x.id === id);
-        if(m) { m.read = true; save(); if(activePeer === from) renderMessages(); }
-    }
+        window.onload = () => {
+            myId = localStorage.getItem('cr_user');
+            if(myId) {
+                document.getElementById('auth-screen').classList.remove('active-screen');
+                showScreen('dash-screen');
+                initPeer();
+                updateProfileUI();
+            }
+        };
 
-    // --- UI RENDERING ---
-    function renderChatList() {
-        const list = document.getElementById('chat-list');
-        list.innerHTML = "";
-        const sorted = Object.keys(db.history).sort((a,b) => {
-            const la = db.history[a].slice(-1)[0]?.id || 0;
-            const lb = db.history[b].slice(-1)[0]?.id || 0;
-            return lb - la;
-        });
-
-        sorted.forEach(id => {
-            const last = db.history[id].slice(-1)[0];
-            const f = db.friends[id] || {};
-            const online = connections[id]?.open;
-            const item = document.createElement('div');
-            item.className = `chat-item ${activePeer === id ? 'active' : ''}`;
-            item.onclick = () => openChat(id);
-            item.innerHTML = `
-                <div class="avatar" style="border: 2px solid ${online ? 'var(--accent)' : 'transparent'}">
-                    ${f.img ? `<img src="${f.img}" style="width:100%;height:100%;border-radius:50%">` : id[0].toUpperCase()}
-                </div>
-                <div class="info">
-                    <div class="top"><h4>${id}</h4> <span class="time">${last?.time || ''}</span></div>
-                    <p>${last?.text || ''}</p>
-                </div>
-            `;
-            list.appendChild(item);
-        });
-    }
-
-    function openChat(id) {
-        activePeer = id;
-        document.getElementById('chat-input-area').classList.remove('hidden');
-        if(window.innerWidth <= 768) toggleSidebar(false);
-        updateHeader(id);
-        renderMessages();
-        renderChatList();
-        connectTo(id);
-    }
-
-    function updateHeader(id) {
-        const f = db.friends[id] || {};
-        document.getElementById('active-nick').innerText = id;
-        document.getElementById('active-status').innerText = connections[id] ? "Online" : (f.status || "Offline");
-        const av = document.getElementById('active-avatar-circle');
-        av.innerHTML = f.img ? `<img src="${f.img}" style="width:100%;height:100%;border-radius:50%">` : id[0].toUpperCase();
-    }
-
-    function renderMessages() {
-        const flow = document.getElementById('messages-flow');
-        flow.innerHTML = "";
-        (db.history[activePeer] || []).forEach(m => {
-            const isMe = m.from === myId;
-            const bubble = document.createElement('div');
-            bubble.className = `bubble ${isMe ? 'sent' : 'received'}`;
-            bubble.innerHTML = `
-                ${m.text}
-                <div class="bubble-meta">
-                    ${m.time} ${isMe ? `<span class="${m.read ? 'tick-blue' : ''}">${m.read ? '✓✓' : '✓'}</span>` : ''}
-                </div>
-            `;
-            flow.appendChild(bubble);
-        });
-        flow.scrollTop = flow.scrollHeight;
-    }
-
-    // --- PROPRIEDADES ---
-    function openProfile() { document.getElementById('profile-modal').style.display = 'flex'; }
-    function closeProfile() { document.getElementById('profile-modal').style.display = 'none'; }
-    function saveProfile() {
-        db.me.img = document.getElementById('p-img').value;
-        db.me.status = document.getElementById('p-status').value;
-        save(); updateMyUI(); closeProfile();
-        Object.values(connections).forEach(c => c.send({type:'profile', data: db.me}));
-    }
-    function updateMyUI() {
-        document.getElementById('my-avatar').src = db.me.img || `https://ui-avatars.com/api/?background=202024&color=fff&name=${myId}`;
-    }
-
-    // --- UTIL ---
-    function toggleSidebar(show) {
-        document.getElementById('sidebar').classList.toggle('hidden', !show);
-        document.getElementById('back-btn').classList.toggle('hidden', show);
-    }
-    function addFriend() {
-        const nick = document.getElementById('add-friend-input').value.trim().toLowerCase();
-        if(nick && nick !== myId) {
-            if(!db.history[nick]) db.history[nick] = [];
-            openChat(nick);
-            document.getElementById('add-friend-input').value = "";
+        function initPeer() {
+            peer = new Peer(myId);
+            peer.on('open', () => {
+                renderChats();
+                db.friends.forEach(f => connectTo(f));
+            });
+            peer.on('connection', c => handleConn(c));
         }
-    }
-    function save() {
-        localStorage.setItem('cris_me_v5', JSON.stringify(db.me));
-        localStorage.setItem('cris_history_v5', JSON.stringify(db.history));
-        localStorage.setItem('cris_friends_v5', JSON.stringify(db.friends));
-    }
-    function copyMyLink() {
-        const url = window.location.origin + window.location.pathname + "?u=" + myId;
-        navigator.clipboard.writeText(url);
-        alert("Link de contato copiado!");
-    }
-    function checkUrlParams() {
-        const u = new URLSearchParams(window.location.search).get('u');
-        if(u && u !== myId) addFriend(u);
-    }
-</script>
+
+        function handleConn(c) {
+            conns[c.peer] = c;
+            c.on('open', () => {
+                if(activePeer === c.peer) document.getElementById('active-status').innerText = "Online";
+                // Sincroniza pendentes
+                (db.history[c.peer] || []).filter(m => m.from === myId && !m.read).forEach(m => c.send(m));
+            });
+            c.on('data', data => {
+                if(data.type === 'msg') {
+                    if(!db.history[c.peer]) db.history[c.peer] = [];
+                    if(!db.history[c.peer].find(m => m.id === data.id)) {
+                        db.history[c.peer].push({...data, read: true});
+                        save(); renderChats(); if(activePeer === c.peer) renderChat();
+                        c.send({type:'ack', id: data.id});
+                    }
+                } else if(data.type === 'ack') {
+                    const m = db.history[c.peer]?.find(x => x.id === data.id);
+                    if(m) { m.read = true; save(); if(activePeer === c.peer) renderChat(); }
+                }
+            });
+        }
+
+        function connectTo(id) { if(!conns[id]) handleConn(peer.connect(id)); }
+
+        function send() {
+            const input = document.getElementById('chat-input');
+            if(!input.value || !activePeer) return;
+            const msg = {
+                id: Date.now(), type:'msg', from: myId, text: input.value,
+                time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), read: false
+            };
+            if(!db.history[activePeer]) db.history[activePeer] = [];
+            db.history[activePeer].push(msg);
+            if(conns[activePeer]?.open) conns[activePeer].send(msg); else connectTo(activePeer);
+            input.value = ""; save(); renderChat(); renderChats();
+        }
+
+        function renderChats() {
+            const list = document.getElementById('chats-list');
+            list.innerHTML = "";
+            Object.keys(db.history).reverse().forEach(id => {
+                const last = db.history[id].slice(-1)[0];
+                list.innerHTML += `
+                    <div class="item-row" onclick="openChat('${id}')">
+                        <div class="avatar">${id[0].toUpperCase()}</div>
+                        <div class="item-body">
+                            <div class="item-top"><span class="item-name">${id}</span><span style="font-size:10px">${last?.time || ''}</span></div>
+                            <div class="item-sub">${last?.text || 'Sem mensagens'}</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function renderFriends() {
+            const list = document.getElementById('friends-list');
+            list.innerHTML = "";
+            db.friends.forEach(id => {
+                list.innerHTML += `
+                    <div class="item-row" onclick="openChat('${id}')">
+                        <div class="avatar">${id[0].toUpperCase()}</div>
+                        <div class="item-body"><div class="item-name">${id}</div></div>
+                    </div>`;
+            });
+        }
+
+        function openChat(id) {
+            activePeer = id;
+            document.getElementById('active-name').innerText = id;
+            document.getElementById('active-status').innerText = conns[id]?.open ? "Online" : "Offline";
+            showScreen('chat-screen');
+            renderChat();
+            connectTo(id);
+        }
+
+        function renderChat() {
+            const flow = document.getElementById('chat-flow');
+            flow.innerHTML = "";
+            (db.history[activePeer] || []).forEach(m => {
+                const isMe = m.from === myId;
+                flow.innerHTML += `
+                    <div class="msg ${isMe ? 'sent' : 'received'}">
+                        ${m.text}
+                        <div class="msg-meta">${m.time} ${isMe ? `<span class="${m.read?'tick-red':''}">${m.read?'✓✓':'✓'}</span>`:''}</div>
+                    </div>`;
+            });
+            flow.scrollTop = flow.scrollHeight;
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+            if(id === 'friends-screen') renderFriends();
+            if(id === 'dash-screen') renderChats();
+        }
+
+        function addFriend() {
+            const id = document.getElementById('new-friend-id').value.trim().toLowerCase();
+            if(id && id !== myId && !db.friends.includes(id)) {
+                db.friends.push(id);
+                if(!db.history[id]) db.history[id] = [];
+                save(); renderFriends();
+                document.getElementById('new-friend-id').value = "";
+            }
+        }
+
+        function saveProfile() {
+            db.me.img = document.getElementById('p-img-url').value;
+            db.me.bio = document.getElementById('p-bio').value;
+            localStorage.setItem('cr_me', JSON.stringify(db.me));
+            updateProfileUI();
+            showScreen('dash-screen');
+        }
+
+        function updateProfileUI() {
+            const img = db.me.img || `https://ui-avatars.com/api/?background=d32f2f&color=fff&name=${myId}`;
+            document.getElementById('my-avatar-img').src = img;
+            document.getElementById('p-avatar-box').innerHTML = db.me.img ? `<img src="${db.me.img}" style="width:100%;height:100%;border-radius:14px;">` : myId[0].toUpperCase();
+        }
+
+        function save() {
+            localStorage.setItem('cr_friends', JSON.stringify(db.friends));
+            localStorage.setItem('cr_history', JSON.stringify(db.history));
+        }
+    </script>
 </body>
 </html>
