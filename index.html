@@ -9,7 +9,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Crimson">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/106/106195.png"> <title>CRIMSON | ENTERPRISE</title>
+    
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/106/106195.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/106/106195.png">
+    
+    <title>CRIMSON | ENTERPRISE</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
@@ -29,7 +33,8 @@
             --bubble-rec: #1f1f22;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; user-select: none; }
+        input, textarea { user-select: text; }
         body { background: var(--bg); color: var(--text); height: 100dvh; display: flex; justify-content: center; overflow: hidden; }
         
         ::-webkit-scrollbar { width: 4px; }
@@ -56,13 +61,15 @@
 
         /* CHAT */
         .chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 30px; }
-        .bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; display: flex; flex-direction: column; }
+        .bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; display: flex; flex-direction: column; user-select: text; }
         .sent { align-self: flex-end; background: var(--bubble-sent); color: #fff; border-bottom-right-radius: 4px; }
         .received { align-self: flex-start; background: var(--bubble-rec); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
         
         .msg-meta { font-size: 10px; margin-top: 4px; display: flex; align-items: center; gap: 4px; align-self: flex-end; opacity: 0.8; }
         .tick { font-size: 14px; }
-        .tick.read { color: #4ade80; } /* Verde quando lido/entregue (simulação) */
+        .tick.queued { color: #a1a1aa; } /* Relógio/Pendente */
+        .tick.sent { color: #d1d1d6; } /* 1 Check */
+        .tick.delivered { color: #4ade80; } /* 2 Checks */
 
         /* INPUTS */
         .input-bar { padding: 15px; display: flex; gap: 10px; background: var(--surface); border-top: 1px solid var(--border); align-items: center; }
@@ -88,18 +95,17 @@
         .selected .checkbox-fake { background: var(--primary); border-color: var(--primary); }
         .selected .checkbox-fake::after { content: '✔'; font-size: 14px; color: white; }
 
-        /* CALL UI - GERAL */
+        /* CALL UI */
         .call-ui { position: fixed; inset: 0; z-index: 99999; background: #0c0c0c; display: none; flex-direction: column; }
         .call-ui.active { display: flex; }
         
-        /* ELEMENTOS DE VÍDEO */
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
         #local-video { width: 100px; height: 150px; position: absolute; bottom: 120px; right: 20px; border-radius: 12px; border: 2px solid var(--primary); object-fit: cover; background: #222; z-index: 10; transition: 0.3s; }
 
-        /* CALL UI - VOICE MODE (WHATSAPP STYLE) */
+        /* CALL UI - VOICE MODE */
         .call-ui.voice-mode { background: #1a1a1a; justify-content: space-between; padding-top: 80px; padding-bottom: 40px; }
         .call-ui.voice-mode #remote-video, 
-        .call-ui.voice-mode #local-video { display: none; } /* Esconde câmeras */
+        .call-ui.voice-mode #local-video { display: none; }
         
         .voice-info { display: none; flex-direction: column; align-items: center; width: 100%; }
         .call-ui.voice-mode .voice-info { display: flex; animation: fadeIn 0.5s; }
@@ -111,7 +117,6 @@
         .call-name { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 10px; }
         .call-status { color: var(--text-dim); font-size: 16px; }
 
-        /* CONTROLES DA CHAMADA */
         .call-controls { position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); display: flex; justify-content: center; align-items: center; gap: 30px; border-radius: 30px 30px 0 0; }
         .ctrl-btn { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.15); border: none; color: white; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); transition: 0.2s; }
         .ctrl-btn:active { transform: scale(0.9); }
@@ -124,11 +129,16 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* TABS GRUPO/CHAT */
+        /* FAB MENU */
         .fab-menu { position: absolute; bottom: 90px; right: 30px; display: flex; flex-direction: column; gap: 15px; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 490; }
         .fab-menu.show { opacity: 1; pointer-events: all; bottom: 100px; }
         .fab-item { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
         .fab-btn-mini { width: 48px; height: 48px; border-radius: 14px; background: var(--card); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+        /* ONLINE STATUS ANIMATION */
+        .online-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-offline { color: var(--text-dim); }
+        .status-online { color: #4ade80; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -180,11 +190,13 @@
                 <div class="avatar" id="chat-av" style="width:36px; height:36px;"></div>
                 <div>
                     <div id="chat-name" style="font-weight: 700; font-size: 15px;">Nome</div>
-                    <div id="chat-status-text" style="font-size: 11px; color: var(--text-dim);">Toque para ver perfil</div>
+                    <div id="chat-status-text" style="font-size: 11px; color: var(--text-dim);">...</div>
                 </div>
             </div>
             <div style="display:flex; gap:15px; font-size: 22px; color: var(--primary);">
-                <i class="ri-phone-fill" onclick="sys.call(false)"></i> <i class="ri-vidicon-fill" onclick="sys.call(true)"></i> </div>
+                <i class="ri-phone-fill" onclick="sys.call(false)"></i>
+                <i class="ri-vidicon-fill" onclick="sys.call(true)"></i>
+            </div>
         </header>
         <div id="messages" class="chat-area"></div>
         <div class="input-bar">
@@ -225,22 +237,18 @@
         </header>
         <div class="profile-hero">
             <div class="big-av" id="me-large-av"></div>
-            
             <div class="info-box">
                 <label style="color:var(--text-dim); font-size:12px;">NOME DE EXIBIÇÃO</label>
                 <input type="text" id="edit-name" class="field" style="width:100%; margin-top:5px; background:var(--bg);">
             </div>
-
             <div class="info-box">
                 <label style="color:var(--text-dim); font-size:12px;">RECADO (BIO)</label>
                 <input type="text" id="edit-bio" class="field" style="width:100%; margin-top:5px; background:var(--bg);">
             </div>
-
             <div class="info-box">
                 <label style="color:var(--text-dim); font-size:12px;">FOTO DE PERFIL (URL)</label>
                 <input type="text" id="edit-pic" class="field" style="width:100%; margin-top:5px; background:var(--bg);" placeholder="https://...">
             </div>
-
             <button class="btn" style="width:100%; margin-top:30px;" onclick="sys.saveProfile()">SALVAR</button>
             <button class="btn" style="width:100%; margin-top:15px; background:transparent; border:1px solid #ff3b30; color:#ff3b30;" onclick="sys.logout()">SAIR DA CONTA</button>
         </div>
@@ -255,7 +263,6 @@
             <div class="big-av" id="contact-large-av"></div>
             <h2 id="contact-real-name" style="margin-bottom:5px;">Nome</h2>
             <div id="contact-real-id" style="color:var(--primary); font-family:monospace; background:rgba(255,0,51,0.1); padding:4px 10px; border-radius:6px;">@id</div>
-            
             <div class="info-box">
                 <label style="color:var(--text-dim); font-size:12px; font-weight:bold;">RECADO</label>
                 <p id="contact-real-bio" style="margin-top:10px; line-height:1.5; color:#fff;">...</p>
@@ -266,7 +273,6 @@
     <div id="call-ui" class="call-ui">
         <video id="remote-video" autoplay playsinline></video>
         <video id="local-video" autoplay muted playsinline></video>
-        
         <div class="voice-info">
             <div class="voice-avatar-container">
                 <div class="voice-avatar-pulse"></div>
@@ -275,7 +281,6 @@
             <div class="call-name" id="voice-call-name">Usuário</div>
             <div class="call-status" id="voice-call-status">Chamada de Voz Crimsom</div>
         </div>
-
         <div class="call-controls">
             <button class="ctrl-btn" id="btn-mic" onclick="sys.toggleMic()"><i class="ri-mic-fill"></i></button>
             <button class="ctrl-btn" id="btn-speaker" onclick="sys.toggleSpeaker()"><i class="ri-volume-up-fill"></i></button>
@@ -285,7 +290,7 @@
 </div>
 
 <script>
-// --- PWA MANIFEST DYNAMIC INJECTION ---
+// PWA Manifest Injection
 const manifest = {
   "name": "Crimson Enterprise",
   "short_name": "Crimson",
@@ -293,24 +298,18 @@ const manifest = {
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
+  "orientation": "portrait",
   "icons": [
     { "src": "https://cdn-icons-png.flaticon.com/512/106/106195.png", "sizes": "192x192", "type": "image/png" },
     { "src": "https://cdn-icons-png.flaticon.com/512/106/106195.png", "sizes": "512x512", "type": "image/png" }
   ]
 };
-const content = encodeURIComponent(JSON.stringify(manifest));
 const link = document.createElement('link');
 link.rel = 'manifest';
-link.href = 'data:application/manifest+json,' + content;
+link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
 document.head.appendChild(link);
 
-// Register Fake SW for install prompt eligibility
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => console.log('SW not needed for demo'));
-}
-
 const sys = {
-    // Estado Global
     peer: null,
     uid: null,
     db: {}, 
@@ -321,15 +320,13 @@ const sys = {
     isVoiceOnly: false,
     fabOpen: false,
     selectedGroupMembers: [],
-    
-    // Configurações de chamada
     micEnabled: true,
     speakerEnabled: true,
+    statusInterval: null,
 
     init() {
         const raw = localStorage.getItem('crimson_db');
         this.db = raw ? JSON.parse(raw) : {};
-        
         const session = localStorage.getItem('crimson_session');
         if(session && this.db[session]) {
             this.uid = session;
@@ -337,27 +334,26 @@ const sys = {
         } else {
             document.getElementById('auth-screen').style.display = 'flex';
         }
-
         document.getElementById('msg-input').onkeydown = (e) => {
             if(e.key === 'Enter') this.send();
         };
     },
 
-    // --- AUTENTICAÇÃO ---
     auth(isRegister) {
         const id = document.getElementById('auth-id').value.trim().toLowerCase();
         const pass = document.getElementById('auth-pass').value.trim();
-
         if(id.length < 3 || pass.length < 3) return alert("Mínimo 3 caracteres");
 
         if(isRegister) {
             if(this.db[id]) return alert("ID já existe");
-            this.db[id] = { pass, name: id, bio: "Olá, estou usando Crimson.", pic: "", friends: {}, groups: {} };
+            // Adicionado 'pending' para msgs offline
+            this.db[id] = { pass, name: id, bio: "Crimson User", pic: "", friends: {}, groups: {}, pending: {} };
             this.saveDb();
             alert("Conta criada! Clique em Entrar.");
         } else {
             if(!this.db[id] || this.db[id].pass !== pass) return alert("Credenciais inválidas");
             this.uid = id;
+            if(!this.db[id].pending) this.db[id].pending = {}; // Migração
             localStorage.setItem('crimson_session', id);
             this.startApp();
         }
@@ -368,6 +364,12 @@ const sys = {
         this.setupPeer();
         this.updateHeader();
         this.renderHome();
+        // Loop para atualizar status "Visto há X minutos"
+        this.statusInterval = setInterval(() => {
+            if(this.currentChat && !this.currentChat.startsWith('group_')) {
+                this.updateChatStatusUI(this.currentChat);
+            }
+        }, 60000);
     },
 
     logout() {
@@ -379,61 +381,100 @@ const sys = {
         localStorage.setItem('crimson_db', JSON.stringify(this.db));
     },
 
-    // --- REDE (PEERJS) ---
     setupPeer() {
         this.peer = new Peer(this.uid);
         
         this.peer.on('open', (id) => {
             console.log('Online:', id);
-            this.flushPendingMessages(); // Tenta enviar mensagens offline
+            this.checkAndFlushPending(); // Envia mensagens que ficaram na fila
         });
 
         this.peer.on('connection', (conn) => {
-            this.activeConns[conn.peer] = conn;
-            conn.on('data', (data) => this.handleData(conn.peer, data));
-            conn.on('open', () => {
-                this.sendProfile(conn);
-                this.flushPendingMessages(conn.peer);
-            });
+            this.setupConnectionEvents(conn);
         });
 
         this.peer.on('call', (call) => {
-            // Detecta tipo de chamada pelo metadata (simplificado: pergunta ao usuário)
-            // Para UI perfeita, assumimos video por padrão mas verificaremos metadata se implementado
-            // Como peerjs vanilla nao passa metadata facil no call, usaremos um truque:
-            // O chamador enviou uma conexao de dados antes.
-            
-            if(confirm(`Recebendo chamada de ${call.peer}. Aceitar?`)) {
+            if(confirm(`Chamada de ${call.peer}. Aceitar?`)) {
                 this.incomingCall = call;
-                // Por padrão aceita com vídeo, mas UI ajusta se for voz
-                // O ideal seria um handshake antes, mas aqui simplificamos:
                 this.answerCall();
             }
         });
         
-        this.peer.on('error', err => console.log(err));
+        this.peer.on('error', err => {
+            console.log("Peer Error:", err.type);
+            // Se falhar ao conectar para enviar mensagem, já foi salvo como pendente no 'send'
+        });
     },
 
-    // --- MENSAGENS E DADOS ---
-    sendProfile(conn) {
-        const me = this.db[this.uid];
-        conn.send({ type: 'sync', name: me.name, bio: me.bio, pic: me.pic });
+    setupConnectionEvents(conn) {
+        this.activeConns[conn.peer] = conn;
+        
+        conn.on('open', () => {
+            // Se conectou, o usuário está online
+            this.updateUserStatus(conn.peer, 'online');
+            this.sendProfile(conn);
+            this.flushPendingToPeer(conn.peer); // Se eu tenho msg pra ele, envio agora
+        });
+
+        conn.on('data', (data) => this.handleData(conn.peer, data));
+        
+        conn.on('close', () => {
+            this.updateUserStatus(conn.peer, 'offline');
+        });
+
+        conn.on('error', () => {
+             this.updateUserStatus(conn.peer, 'offline');
+        });
     },
 
+    // --- LÓGICA DE STATUS E OFFLINE ---
+    updateUserStatus(id, status) {
+        if(!this.db[this.uid].friends[id]) return;
+        const friend = this.db[this.uid].friends[id];
+        
+        friend.status = status;
+        if(status === 'offline') {
+            friend.lastSeen = Date.now();
+        }
+        this.saveDb();
+        
+        if(this.currentChat === id) {
+            this.updateChatStatusUI(id);
+        }
+    },
+
+    updateChatStatusUI(id) {
+        if(id.startsWith('group_')) return;
+        const f = this.db[this.uid].friends[id];
+        const statusEl = document.getElementById('chat-status-text');
+        
+        if(this.activeConns[id] && this.activeConns[id].open) {
+             statusEl.innerHTML = '<span class="online-dot"></span>Online';
+             statusEl.className = 'status-online';
+        } else {
+            const time = f.lastSeen ? new Date(f.lastSeen).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Desconhecido';
+            const date = f.lastSeen ? new Date(f.lastSeen).toLocaleDateString() : '';
+            const today = new Date().toLocaleDateString();
+            const displayDate = date === today ? 'hoje' : date;
+            
+            statusEl.innerText = `Visto ${displayDate} às ${time}`;
+            statusEl.className = 'status-offline';
+        }
+    },
+
+    // --- MENSAGENS ---
     handleData(senderId, data) {
-        // 1. Recibo de Entrega (Tick Duplo)
+        // Recibo (Tick Duplo)
         if(data.type === 'receipt') {
             this.markAsDelivered(senderId, data.msgId);
             return;
         }
 
-        // 2. Mensagem de Texto
+        // Mensagem Texto
         if(data.type === 'msg') {
-            // Mandar recibo de volta
             const conn = this.activeConns[senderId];
-            if(conn && conn.open) conn.send({ type: 'receipt', msgId: data.id });
+            if(conn && conn.open) conn.send({ type: 'receipt', msgId: data.id }); // Confirma recebimento
 
-            // Tratar Grupo
             if(data.groupId) {
                 this.handleGroupMessage(data);
                 return;
@@ -444,7 +485,7 @@ const sys = {
             else this.renderHome();
         }
 
-        // 3. Sync
+        // Sync Perfil
         if(data.type === 'sync') {
             if(!this.db[this.uid].friends[senderId]) {
                 this.db[this.uid].friends[senderId] = { history: [] };
@@ -455,39 +496,12 @@ const sys = {
             this.renderHome();
             if(this.currentChat === senderId) this.updateChatHeader(senderId);
         }
-
-        // 4. Sinalização de Chamada de Voz
+        
+        // Voz
         if(data.type === 'call_type' && data.mode === 'voice') {
             this.isVoiceOnly = true;
             this.updateCallUI();
         }
-    },
-
-    handleGroupMessage(data) {
-        // Verifica se grupo existe, senão cria
-        let groups = this.db[this.uid].groups || {};
-        if(!groups[data.groupId]) {
-            groups[data.groupId] = {
-                name: data.groupName,
-                members: data.members,
-                history: []
-            };
-        }
-        
-        // Adiciona msg
-        groups[data.groupId].history.push({
-            sender: data.senderId, // Quem mandou de verdade
-            text: data.text,
-            time: Date.now(),
-            status: 'read', // Recebida é lida/entregue
-            id: data.id
-        });
-        
-        this.db[this.uid].groups = groups;
-        this.saveDb();
-        
-        if(this.currentChat === data.groupId) this.renderMessages();
-        else this.renderHome();
     },
 
     send() {
@@ -499,73 +513,96 @@ const sys = {
         const msgId = Date.now() + Math.random().toString(36).substr(2, 9);
         input.value = '';
 
-        // LÓGICA DE GRUPO
         if(target.startsWith('group_')) {
             const grp = this.db[this.uid].groups[target];
-            // Salvar local
             grp.history.push({ sender: this.uid, text, time: Date.now(), status: 'sent', id: msgId });
             this.saveDb();
             this.renderMessages();
 
-            // Enviar para todos os membros (Broadcast)
             grp.members.forEach(memberId => {
-                if(memberId === this.uid) return;
-                this.sendMessageToPeer(memberId, {
-                    type: 'msg', text, id: msgId,
-                    groupId: target, groupName: grp.name, members: grp.members, senderId: this.uid
-                });
+                if(memberId !== this.uid) {
+                    this.sendMessageToPeer(memberId, {
+                        type: 'msg', text, id: msgId, groupId: target, groupName: grp.name, senderId: this.uid
+                    });
+                }
             });
         } else {
-            // CHAT PRIVADO
-            this.pushMessage(target, this.uid, text, 'sent', msgId);
+            // Privado
+            // Status inicial: 'queued' (pendente)
+            this.pushMessage(target, this.uid, text, 'queued', msgId);
             this.renderMessages();
+            
+            // Tenta enviar
             this.sendMessageToPeer(target, { type: 'msg', text, id: msgId });
         }
-        
         this.renderHome();
     },
 
     sendMessageToPeer(targetId, payload) {
-        // Função auxiliar que tenta enviar ou põe na fila se offline
-        // Para simplificar "ticks" offline, vamos considerar 'sent' como 1 tick.
-        // Se conectar e enviar, o receptor devolve 'receipt' -> 2 ticks.
-        
-        const send = (conn) => {
-            conn.send(payload);
-            conn.send({ type: 'sync', name: this.db[this.uid].name, bio: this.db[this.uid].bio, pic: this.db[this.uid].pic });
-        };
-
+        // Se conectado, envia direto
         if(this.activeConns[targetId] && this.activeConns[targetId].open) {
-            send(this.activeConns[targetId]);
+            this.activeConns[targetId].send(payload);
+            // Atualiza status local para 'sent' (1 tick)
+            if(!payload.groupId) this.markAsSent(targetId, payload.id);
         } else {
-            // Tenta conectar
+            // Se não conectado, salva na fila pendente
+            this.queueMessage(targetId, payload);
+            
+            // Tenta conectar (se conseguir, o evento 'open' vai disparar flushPendingToPeer)
             const conn = this.peer.connect(targetId);
-            conn.on('open', () => {
-                this.activeConns[targetId] = conn;
-                conn.on('data', d => this.handleData(targetId, d));
-                send(conn);
-            });
-            // Se falhar, fica como 'sent' (1 tick) e será reenviado no futuro se implementarmos fila persistente complexa.
-            // Para este código, a tentativa de conexão é imediata.
+            this.setupConnectionEvents(conn);
         }
     },
 
-    pushMessage(friendId, senderId, text, status, id) {
-        if(!this.db[this.uid].friends[friendId]) {
-            this.db[this.uid].friends[friendId] = { history: [] };
+    queueMessage(targetId, payload) {
+        if(!this.db[this.uid].pending[targetId]) {
+            this.db[this.uid].pending[targetId] = [];
         }
-        this.db[this.uid].friends[friendId].history.push({
-            sender: senderId,
-            text: text,
-            time: Date.now(),
-            status: status,
-            id: id
-        });
+        this.db[this.uid].pending[targetId].push(payload);
         this.saveDb();
     },
 
+    flushPendingToPeer(peerId) {
+        const queue = this.db[this.uid].pending[peerId];
+        if(queue && queue.length > 0) {
+            const conn = this.activeConns[peerId];
+            if(conn && conn.open) {
+                // Envia todas
+                queue.forEach(payload => {
+                    conn.send(payload);
+                    if(!payload.groupId) this.markAsSent(peerId, payload.id);
+                });
+                // Limpa fila
+                delete this.db[this.uid].pending[peerId];
+                this.saveDb();
+                if(this.currentChat === peerId) this.renderMessages();
+            }
+        }
+    },
+    
+    checkAndFlushPending() {
+        // Varre todos pendentes e tenta reconectar
+        Object.keys(this.db[this.uid].pending).forEach(targetId => {
+            if(!this.activeConns[targetId] || !this.activeConns[targetId].open) {
+                const conn = this.peer.connect(targetId);
+                this.setupConnectionEvents(conn);
+            }
+        });
+    },
+
+    markAsSent(friendId, msgId) {
+        const f = this.db[this.uid].friends[friendId];
+        if(f) {
+            const msg = f.history.find(m => m.id === msgId);
+            if(msg) {
+                msg.status = 'sent';
+                this.saveDb();
+                if(this.currentChat === friendId) this.renderMessages();
+            }
+        }
+    },
+
     markAsDelivered(friendId, msgId) {
-        // Busca em privado
         const f = this.db[this.uid].friends[friendId];
         if(f) {
             const msg = f.history.find(m => m.id === msgId);
@@ -575,28 +612,74 @@ const sys = {
                 if(this.currentChat === friendId) this.renderMessages();
             }
         }
-        // Nota: Ticks em grupo são complexos (n receipts), simplificado para privado aqui.
     },
 
-    flushPendingMessages(specificId) {
-        // Funcionalidade avançada: reenvia mensagens com status 'sent' quando reconecta
-        // Simplificado aqui para não estourar complexidade
-    },
-
-    // --- INTERFACE (UI) ---
-    toggleFab() {
-        this.fabOpen = !this.fabOpen;
-        const menu = document.getElementById('fab-menu');
-        const icon = document.getElementById('fab-icon');
-        if(this.fabOpen) {
-            menu.classList.add('show');
-            icon.classList.replace('ri-add-line', 'ri-close-line');
-            icon.style.transform = "rotate(90deg)";
-        } else {
-            menu.classList.remove('show');
-            icon.classList.replace('ri-close-line', 'ri-add-line');
-            icon.style.transform = "rotate(0deg)";
+    pushMessage(friendId, senderId, text, status, id) {
+        if(!this.db[this.uid].friends[friendId]) {
+            this.db[this.uid].friends[friendId] = { history: [] };
         }
+        this.db[this.uid].friends[friendId].history.push({
+            sender: senderId, text, time: Date.now(), status, id
+        });
+        this.saveDb();
+    },
+
+    handleGroupMessage(data) {
+        let groups = this.db[this.uid].groups || {};
+        if(!groups[data.groupId]) {
+            groups[data.groupId] = { name: data.groupName, members: data.members || [], history: [] };
+        }
+        groups[data.groupId].history.push({
+            sender: data.senderId, text: data.text, time: Date.now(), status: 'read', id: data.id
+        });
+        this.db[this.uid].groups = groups;
+        this.saveDb();
+        if(this.currentChat === data.groupId) this.renderMessages();
+        else this.renderHome();
+    },
+
+    // --- UI HELPERS ---
+    sendProfile(conn) {
+        const me = this.db[this.uid];
+        conn.send({ type: 'sync', name: me.name, bio: me.bio, pic: me.pic });
+    },
+
+    renderMessages() {
+        const area = document.getElementById('messages');
+        area.innerHTML = '';
+        let msgs = [];
+        if(this.currentChat.startsWith('group_')) {
+            msgs = this.db[this.uid].groups[this.currentChat].history || [];
+        } else {
+            msgs = this.db[this.uid].friends[this.currentChat].history || [];
+        }
+        
+        msgs.forEach(m => {
+            const isMe = m.sender === this.uid;
+            const div = document.createElement('div');
+            div.className = `bubble ${isMe ? 'sent' : 'received'}`;
+            
+            let ticks = '';
+            if(isMe && !this.currentChat.startsWith('group_')) {
+                let icon = '<i class="ri-time-line"></i>'; // Default queued
+                let cls = 'tick queued';
+                
+                if(m.status === 'sent') { icon = '<i class="ri-check-line"></i>'; cls = 'tick sent'; }
+                if(m.status === 'delivered') { icon = '<i class="ri-check-double-line"></i>'; cls = 'tick delivered'; }
+                
+                ticks = `<span class="${cls}">${icon}</span>`;
+            }
+
+            let senderName = '';
+            if(!isMe && this.currentChat.startsWith('group_')) {
+                 const f = this.db[this.uid].friends[m.sender];
+                 senderName = `<div style="font-size:10px; color:var(--primary); font-weight:bold; margin-bottom:2px;">${f ? f.name : m.sender}</div>`;
+            }
+
+            div.innerHTML = `${senderName}${m.text}<div class="msg-meta"><span>${new Date(m.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>${ticks}</div>`;
+            area.appendChild(div);
+        });
+        area.scrollTop = area.scrollHeight;
     },
 
     renderHome() {
@@ -604,38 +687,20 @@ const sys = {
         list.innerHTML = '';
         const friends = this.db[this.uid].friends || {};
         const groups = this.db[this.uid].groups || {};
-
         let allChats = [];
 
-        // Coleta Amigos
         Object.keys(friends).forEach(id => {
             const f = friends[id];
             const last = f.history.length ? f.history[f.history.length-1] : null;
-            allChats.push({
-                id: id,
-                name: f.name || id,
-                pic: f.pic,
-                lastMsg: last ? last.text : 'Nova conexão',
-                time: last ? last.time : 0,
-                type: 'user'
-            });
+            allChats.push({ id, name: f.name || id, pic: f.pic, lastMsg: last ? last.text : 'Nova conexão', time: last ? last.time : 0, type: 'user' });
         });
 
-        // Coleta Grupos
         Object.keys(groups).forEach(id => {
             const g = groups[id];
             const last = g.history.length ? g.history[g.history.length-1] : null;
-            allChats.push({
-                id: id,
-                name: g.name,
-                pic: null, // Sem foto de grupo por enquanto
-                lastMsg: last ? `${last.sender}: ${last.text}` : 'Grupo criado',
-                time: last ? last.time : 0,
-                type: 'group'
-            });
+            allChats.push({ id, name: g.name, pic: null, lastMsg: last ? `${last.sender}: ${last.text}` : 'Grupo criado', time: last ? last.time : 0, type: 'group' });
         });
 
-        // Ordena
         allChats.sort((a,b) => b.time - a.time);
 
         allChats.forEach(c => {
@@ -654,89 +719,19 @@ const sys = {
         });
     },
 
-    // --- GRUPOS ---
-    renderCreateGroup() {
-        const list = document.getElementById('group-contact-list');
-        list.innerHTML = '';
-        this.selectedGroupMembers = [];
-        
-        Object.keys(this.db[this.uid].friends).forEach(id => {
-            const f = this.db[this.uid].friends[id];
-            const div = document.createElement('div');
-            div.className = 'contact-select-item';
-            div.onclick = () => {
-                div.classList.toggle('selected');
-                if(this.selectedGroupMembers.includes(id)) {
-                    this.selectedGroupMembers = this.selectedGroupMembers.filter(m => m !== id);
-                } else {
-                    this.selectedGroupMembers.push(id);
-                }
-            };
-            div.innerHTML = `
-                <div class="checkbox-fake"></div>
-                <div style="font-weight:600;">${f.name || id}</div>
-            `;
-            list.appendChild(div);
-        });
-    },
-
-    createGroup() {
-        const name = document.getElementById('group-name-input').value.trim();
-        if(name.length < 1) return alert("Digite um nome para o grupo");
-        if(this.selectedGroupMembers.length < 1) return alert("Selecione pelo menos 1 membro");
-
-        const gid = 'group_' + Date.now();
-        const members = [this.uid, ...this.selectedGroupMembers];
-        
-        if(!this.db[this.uid].groups) this.db[this.uid].groups = {};
-        this.db[this.uid].groups[gid] = {
-            name: name,
-            members: members,
-            history: []
-        };
-        this.saveDb();
-        
-        // Notifica membros na primeira mensagem enviada
-        this.closeView('view-create-group');
-        this.openChat(gid);
-    },
-
-    // --- CHAT ---
-    addContact() {
-        const id = document.getElementById('target-id').value.trim().toLowerCase();
-        if(id === this.uid) return alert("Erro: Auto-adição.");
-        if(id) {
-            if(!this.db[this.uid].friends[id]) {
-                this.db[this.uid].friends[id] = { name: id, history: [], bio: '', pic: '' };
-                this.saveDb();
-            }
-            this.closeView('view-add');
-            this.openChat(id);
-            // Conecta
-            const conn = this.peer.connect(id);
-            conn.on('open', () => {
-                this.activeConns[id] = conn;
-                this.sendProfile(conn);
-                conn.on('data', d => this.handleData(id, d));
-            });
-        }
-    },
-
+    // --- OTHER FUNCS ---
     openChat(id) {
         this.currentChat = id;
         this.updateChatHeader(id);
         this.renderMessages();
         this.openView('view-chat');
-        
         if(!id.startsWith('group_')) {
-            // Assegura conexão se for privado
+            // Tenta reconectar e atualizar status UI
             if(!this.activeConns[id] || !this.activeConns[id].open) {
                 const conn = this.peer.connect(id);
-                conn.on('open', () => {
-                    this.activeConns[id] = conn;
-                    this.sendProfile(conn);
-                    conn.on('data', d => this.handleData(id, d));
-                });
+                this.setupConnectionEvents(conn);
+            } else {
+                this.updateChatStatusUI(id);
             }
         }
     },
@@ -745,69 +740,67 @@ const sys = {
         let name, pic;
         if(id.startsWith('group_')) {
             const g = this.db[this.uid].groups[id];
-            name = g.name;
-            pic = null;
+            name = g.name; pic = null;
             document.getElementById('chat-status-text').innerText = `${g.members.length} membros`;
+            document.getElementById('chat-status-text').className = 'status-offline';
         } else {
             const f = this.db[this.uid].friends[id];
-            name = f.name || id;
-            pic = f.pic;
-            document.getElementById('chat-status-text').innerText = 'Toque para ver perfil';
+            name = f.name || id; pic = f.pic;
+            this.updateChatStatusUI(id);
         }
-        
         document.getElementById('chat-name').innerText = name;
         document.getElementById('chat-av').innerHTML = pic ? `<img src="${pic}">` : (id.startsWith('group_') ? '<i class="ri-group-fill"></i>' : name[0].toUpperCase());
-    },
-
-    renderMessages() {
-        const area = document.getElementById('messages');
-        area.innerHTML = '';
-        let msgs = [];
-        
-        if(this.currentChat.startsWith('group_')) {
-            msgs = this.db[this.uid].groups[this.currentChat].history || [];
-        } else {
-            msgs = this.db[this.uid].friends[this.currentChat].history || [];
-        }
-        
-        msgs.forEach(m => {
-            const isMe = m.sender === this.uid;
-            const div = document.createElement('div');
-            div.className = `bubble ${isMe ? 'sent' : 'received'}`;
-            
-            // Ticks: 1 check (sent), 2 checks (delivered/read)
-            let ticks = '';
-            if(isMe && !this.currentChat.startsWith('group_')) {
-                const checkClass = m.status === 'delivered' ? 'tick read' : 'tick';
-                const icon = m.status === 'delivered' ? '<i class="ri-check-double-line"></i>' : '<i class="ri-check-line"></i>';
-                ticks = `<span class="${checkClass}">${icon}</span>`;
-            }
-
-            // Nome em grupos
-            let senderName = '';
-            if(!isMe && this.currentChat.startsWith('group_')) {
-                 // Tenta achar nome nos amigos, senao usa ID
-                 const f = this.db[this.uid].friends[m.sender];
-                 senderName = `<div style="font-size:10px; color:var(--primary); font-weight:bold; margin-bottom:2px;">${f ? f.name : m.sender}</div>`;
-            }
-
-            div.innerHTML = `
-                ${senderName}
-                ${m.text}
-                <div class="msg-meta">
-                    <span>${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    ${ticks}
-                </div>
-            `;
-            area.appendChild(div);
-        });
-        area.scrollTop = area.scrollHeight;
     },
 
     closeChat() {
         this.currentChat = null;
         this.closeView('view-chat');
         this.renderHome();
+    },
+
+    addContact() {
+        const id = document.getElementById('target-id').value.trim().toLowerCase();
+        if(id === this.uid) return alert("Erro: Auto-adição.");
+        if(id) {
+            if(!this.db[this.uid].friends[id]) {
+                this.db[this.uid].friends[id] = { name: id, history: [], bio: '', pic: '', lastSeen: 0 };
+                this.saveDb();
+            }
+            this.closeView('view-add');
+            this.openChat(id);
+        }
+    },
+
+    // --- GRUPOS ---
+    renderCreateGroup() {
+        const list = document.getElementById('group-contact-list');
+        list.innerHTML = '';
+        this.selectedGroupMembers = [];
+        Object.keys(this.db[this.uid].friends).forEach(id => {
+            const f = this.db[this.uid].friends[id];
+            const div = document.createElement('div');
+            div.className = 'contact-select-item';
+            div.onclick = () => {
+                div.classList.toggle('selected');
+                if(this.selectedGroupMembers.includes(id)) this.selectedGroupMembers = this.selectedGroupMembers.filter(m => m !== id);
+                else this.selectedGroupMembers.push(id);
+            };
+            div.innerHTML = `<div class="checkbox-fake"></div><div style="font-weight:600;">${f.name || id}</div>`;
+            list.appendChild(div);
+        });
+    },
+
+    createGroup() {
+        const name = document.getElementById('group-name-input').value.trim();
+        if(name.length < 1 || this.selectedGroupMembers.length < 1) return alert("Preencha o nome e selecione membros");
+        const gid = 'group_' + Date.now();
+        const members = [this.uid, ...this.selectedGroupMembers];
+        
+        if(!this.db[this.uid].groups) this.db[this.uid].groups = {};
+        this.db[this.uid].groups[gid] = { name, members, history: [] };
+        this.saveDb();
+        this.closeView('view-create-group');
+        this.openChat(gid);
     },
 
     // --- PERFIL ---
@@ -819,10 +812,7 @@ const sys = {
         this.saveDb();
         this.updateHeader();
         this.closeView('view-me');
-        // Propaga
-        Object.values(this.activeConns).forEach(conn => {
-            if(conn.open) this.sendProfile(conn);
-        });
+        Object.values(this.activeConns).forEach(conn => { if(conn.open) this.sendProfile(conn); });
     },
 
     updateHeader() {
@@ -831,7 +821,6 @@ const sys = {
         document.getElementById('edit-name').value = me.name || "";
         document.getElementById('edit-bio').value = me.bio || "";
         document.getElementById('edit-pic').value = me.pic || "";
-        
         const html = me.pic ? `<img src="${me.pic}">` : this.uid[0].toUpperCase();
         document.getElementById('header-av').innerHTML = html;
         document.getElementById('me-large-av').innerHTML = html.replace('width:100%', 'width:100%');
@@ -840,63 +829,45 @@ const sys = {
     showContact() {
         if(!this.currentChat || this.currentChat.startsWith('group_')) return;
         const f = this.db[this.uid].friends[this.currentChat];
-        
         document.getElementById('contact-real-name').innerText = f.name || this.currentChat;
         document.getElementById('contact-real-id').innerText = '@' + this.currentChat;
         document.getElementById('contact-real-bio').innerText = f.bio || "Sem recado.";
-        
         const html = f.pic ? `<img src="${f.pic}">` : `<span style="font-size:40px; color:var(--primary); font-weight:bold;">${this.currentChat[0].toUpperCase()}</span>`;
         document.getElementById('contact-large-av').innerHTML = html;
-        
         this.openView('view-contact');
     },
 
-    // --- CHAMADAS (VOZ E VIDEO) ---
+    // --- CHAMADAS ---
     async call(isVideo) {
-        if(this.currentChat.startsWith('group_')) return alert("Chamadas em grupo indisponíveis nesta versão.");
-        
+        if(this.currentChat.startsWith('group_')) return alert("Sem chamadas em grupo.");
         this.isVoiceOnly = !isVideo;
-        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
             this.callStream = stream;
-            
             this.updateCallUI();
-            
-            // Sinaliza tipo de chamada antes de iniciar stream
             if(this.isVoiceOnly && this.activeConns[this.currentChat]) {
                 this.activeConns[this.currentChat].send({ type: 'call_type', mode: 'voice' });
             }
-
             const call = this.peer.call(this.currentChat, stream);
             this.handleMediaCall(call);
-
-        } catch(e) {
-            console.error(e);
-            alert("Erro: Permita acesso a câmera/mic e use HTTPS.");
-        }
+        } catch(e) { alert("Erro mídia/HTTPS."); }
     },
 
     async answerCall() {
         try {
-            // Se foi marcado como voz apenas na sinalização
             const stream = await navigator.mediaDevices.getUserMedia({ video: !this.isVoiceOnly, audio: true });
             this.callStream = stream;
             this.updateCallUI();
-            
             this.incomingCall.answer(stream);
             this.handleMediaCall(this.incomingCall);
-        } catch(e) {
-            alert("Erro ao atender.");
-        }
+        } catch(e) { alert("Erro ao atender."); }
     },
 
     handleMediaCall(call) {
         this.incomingCall = call;
         call.on('stream', remoteStream => {
-            const vid = document.getElementById('remote-video');
-            vid.srcObject = remoteStream;
-            vid.play();
+            document.getElementById('remote-video').srcObject = remoteStream;
+            document.getElementById('remote-video').play();
         });
         call.on('close', () => this.endCall(true));
     },
@@ -904,21 +875,15 @@ const sys = {
     updateCallUI() {
         const ui = document.getElementById('call-ui');
         ui.classList.add('active');
-        
-        // Reset controls
-        document.getElementById('btn-mic').className = 'ctrl-btn active'; // Active style means ON here
+        document.getElementById('btn-mic').className = 'ctrl-btn active';
         document.getElementById('btn-speaker').className = 'ctrl-btn active';
         this.micEnabled = true;
 
         if(this.isVoiceOnly) {
             ui.classList.add('voice-mode');
-            // Carrega info do usuário
-            const f = this.db[this.uid].friends[this.currentChat] || { name: this.incomingCall?.peer || 'Desconhecido', pic: '' };
+            const f = this.db[this.uid].friends[this.currentChat] || { name: this.incomingCall?.peer || '...', pic: '' };
             document.getElementById('voice-call-name').innerText = f.name || f.peer;
             document.getElementById('voice-call-img').src = f.pic || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            
-            // Local stream (mic only)
-            // Não precisamos mostrar video local
         } else {
             ui.classList.remove('voice-mode');
             document.getElementById('local-video').srcObject = this.callStream;
@@ -930,48 +895,38 @@ const sys = {
         const track = this.callStream.getAudioTracks()[0];
         this.micEnabled = !this.micEnabled;
         track.enabled = this.micEnabled;
-        
         const btn = document.getElementById('btn-mic');
-        if(this.micEnabled) {
-            btn.classList.add('active');
-            btn.innerHTML = '<i class="ri-mic-fill"></i>';
-        } else {
-            btn.classList.remove('active');
-            btn.innerHTML = '<i class="ri-mic-off-fill"></i>';
-        }
+        btn.innerHTML = this.micEnabled ? '<i class="ri-mic-fill"></i>' : '<i class="ri-mic-off-fill"></i>';
+        btn.classList.toggle('active');
     },
 
     toggleSpeaker() {
-        // Em navegadores móveis/desktop, controle real de speaker é limitado por segurança.
-        // Simulamos a UI e tentamos mutar o elemento remoto se desejado.
         const vid = document.getElementById('remote-video');
         this.speakerEnabled = !this.speakerEnabled;
         vid.muted = !this.speakerEnabled;
-        
         const btn = document.getElementById('btn-speaker');
-        if(this.speakerEnabled) {
-            btn.classList.add('active');
-            btn.innerHTML = '<i class="ri-volume-up-fill"></i>';
-        } else {
-            btn.classList.remove('active');
-            btn.innerHTML = '<i class="ri-volume-mute-fill"></i>';
-        }
+        btn.innerHTML = this.speakerEnabled ? '<i class="ri-volume-up-fill"></i>' : '<i class="ri-volume-mute-fill"></i>';
+        btn.classList.toggle('active');
     },
 
     endCall(remoteClosed) {
         if(this.incomingCall) this.incomingCall.close();
         if(this.callStream) this.callStream.getTracks().forEach(t => t.stop());
-        
         document.getElementById('call-ui').classList.remove('active', 'voice-mode');
         this.incomingCall = null;
         this.callStream = null;
         this.isVoiceOnly = false;
-        if(!remoteClosed) {
-            // Opcional: play sound
-        }
     },
 
     // UTILS
+    toggleFab() {
+        this.fabOpen = !this.fabOpen;
+        document.getElementById('fab-menu').classList.toggle('show');
+        const icon = document.getElementById('fab-icon');
+        icon.classList.toggle('ri-add-line');
+        icon.classList.toggle('ri-close-line');
+        icon.style.transform = this.fabOpen ? "rotate(90deg)" : "rotate(0deg)";
+    },
     openView(id) { 
         if(id === 'view-create-group') this.renderCreateGroup();
         document.getElementById(id).classList.add('active'); 
