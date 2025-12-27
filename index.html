@@ -3,218 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crisálida Neo-Gamer</title>
+    <title>Crisálida PRO | P2P</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg: #0b0b0e;
-            --panel: #16161d;
-            --accent: #00f2ff;
-            --neon-purple: #7000ff;
-            --text: #ffffff;
-            --gray: #8e8e93;
+            --bg: #0b0b0e; --panel: #16161d; --accent: #00f2ff;
+            --purple: #7000ff; --text: #ffffff; --danger: #ff3b30;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* --- TELA DE AUTENTICAÇÃO --- */
+        /* LOGIN SCREEN */
         #auth-screen {
-            position: fixed; inset: 0; background: var(--bg); z-index: 5000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
+            position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
         }
-        .auth-box { width: 100%; max-width: 350px; background: var(--panel); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-        .auth-input { width: 100%; padding: 14px; background: #000; border: 1px solid #333; border-radius: 12px; color: white; margin-bottom: 12px; outline: none; }
-        .auth-btn { width: 100%; padding: 14px; background: var(--neon-purple); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(112,0,255,0.3); }
+        .auth-box { 
+            width: 100%; max-width: 350px; background: var(--panel); padding: 30px; 
+            border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); text-align: center;
+        }
+        input { 
+            width: 100%; padding: 14px; background: #000; border: 1px solid #333; 
+            border-radius: 12px; color: white; margin-bottom: 12px; outline: none; 
+        }
+        .btn { 
+            width: 100%; padding: 14px; border: none; border-radius: 12px; 
+            font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .btn-main { background: var(--purple); color: white; }
 
-        /* --- INTERFACE PRINCIPAL --- */
+        /* APP LAYOUT */
         #app { display: none; flex-direction: column; height: 100%; }
-        header { height: 65px; background: var(--panel); display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .chat-view { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-image: radial-gradient(circle at center, #111 0%, #000 100%); }
+        header { 
+            height: 65px; background: var(--panel); display: flex; 
+            align-items: center; padding: 0 15px; border-bottom: 1px solid #222; 
+        }
+        #chat-flow { 
+            flex: 1; overflow-y: auto; padding: 15px; display: flex; 
+            flex-direction: column; gap: 10px; background: #0e0e12;
+        }
 
-        /* --- BUBBLES --- */
-        .bubble { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; position: relative; line-height: 1.4; }
-        .bubble.sent { align-self: flex-end; background: var(--neon-purple); border-bottom-right-radius: 4px; }
-        .bubble.received { align-self: flex-start; background: #222; border-bottom-left-radius: 4px; border-left: 3px solid var(--accent); }
-        .time { font-size: 10px; opacity: 0.5; margin-left: 10px; float: right; margin-top: 4px; }
+        /* BUBBLES */
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.4; }
+        .sent { align-self: flex-end; background: var(--purple); border-bottom-right-radius: 2px; }
+        .received { align-self: flex-start; background: #26262e; border-bottom-left-radius: 2px; border-left: 3px solid var(--accent); }
 
-        /* --- CONTROLES --- */
-        .input-bar { padding: 12px; background: var(--panel); display: flex; gap: 10px; align-items: center; }
-        .msg-input { flex: 1; background: #000; border: none; padding: 12px 18px; border-radius: 25px; color: white; outline: none; }
-        .icon-btn { background: none; border: none; color: var(--accent); font-size: 24px; cursor: pointer; }
-
-        /* --- CALL HUD --- */
-        #call-ui { position: fixed; inset: 0; background: #000; z-index: 4000; display: none; flex-direction: column; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { position: absolute; top: 20px; right: 20px; width: 100px; height: 150px; border-radius: 15px; border: 2px solid var(--accent); object-fit: cover; }
-
-        #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 8px 20px; border-radius: 20px; font-weight: bold; display: none; z-index: 6000; }
+        .input-area { padding: 15px; background: var(--panel); display: flex; gap: 10px; }
+        .call-ui { 
+            position: fixed; inset: 0; background: #000; z-index: 8000; 
+            display: none; flex-direction: column; 
+        }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        #local-video { 
+            position: absolute; top: 20px; right: 20px; width: 100px; 
+            height: 150px; border: 2px solid var(--accent); border-radius: 10px; z-index: 10;
+        }
     </style>
 </head>
 <body>
 
-    <div id="toast">LINK COPIADO</div>
-
     <div id="auth-screen">
         <div class="auth-box">
-            <h2 style="text-align: center; margin-bottom: 20px; color: var(--accent);">CRISÁLIDA LOGIN</h2>
-            <input type="text" id="user-id" class="auth-input" placeholder="Usuário">
-            <input type="password" id="user-pass" class="auth-input" placeholder="Senha">
-            <button class="auth-btn" onclick="handleAuth()">ENTRAR / CRIAR</button>
-            <p style="font-size: 11px; color: var(--gray); margin-top: 15px; text-align: center;">Dados salvos localmente no navegador.</p>
+            <h2 style="color: var(--accent); margin-bottom: 20px;">CRISÁLIDA LOGIN</h2>
+            <input type="text" id="user-id" placeholder="Usuário">
+            <input type="password" id="user-pass" placeholder="Senha">
+            <button class="btn btn-main" onclick="handleAuth()">ENTRAR / CRIAR</button>
         </div>
     </div>
 
     <div id="app">
         <header>
             <div style="flex: 1;">
-                <h4 id="partner-name">Geral</h4>
-                <span id="conn-status" style="font-size: 11px; color: var(--gray);">Desconectado</span>
+                <h4 id="display-name">Carregando...</h4>
+                <span id="peer-status" style="font-size: 11px; color: #888;">Offline</span>
             </div>
-            <button class="icon-btn" onclick="copyInvite()">🔗</button>
-            <button class="icon-btn" onclick="startCall()" style="margin-left: 15px;">📞</button>
-            <button class="icon-btn" onclick="logout()" style="margin-left: 15px; color: #ff3b30;">🚪</button>
+            <button onclick="copyLink()" style="background:none; border:none; color:var(--accent); font-size:20px; cursor:pointer; margin-right:15px;">🔗</button>
+            <button onclick="startCall()" style="background:none; border:none; color:var(--accent); font-size:20px; cursor:pointer; margin-right:15px;">📞</button>
+            <button onclick="logout()" style="background:none; border:none; color:var(--danger); font-size:20px; cursor:pointer;">🚪</button>
         </header>
 
-        <main class="chat-view" id="chat-view"></main>
+        <main id="chat-flow"></main>
 
-        <div class="input-bar">
-            <input type="text" id="msg-input" class="msg-input" placeholder="Mensagem..." onkeydown="if(event.key==='Enter') send()">
-            <button class="icon-btn" onclick="send()" style="color: var(--neon-purple);">🚀</button>
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Mensagem..." onkeydown="if(event.key==='Enter') send()">
+            <button onclick="send()" style="background:var(--purple); border:none; color:white; padding:0 20px; border-radius:10px;">ENVIAR</button>
         </div>
     </div>
 
-    <div id="call-ui">
+    <div id="call-ui" class="call-ui">
         <video id="local-video" autoplay muted playsinline></video>
         <video id="remote-video" autoplay playsinline></video>
-        <div style="position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center;">
-            <button onclick="endCall()" style="width:70px; height:70px; background:#ff3b30; border-radius:50%; border:none; color:white; font-size:30px;">✖</button>
-        </div>
+        <button onclick="endCall()" style="position:absolute; bottom:40px; left:50%; transform:translateX(-50%); width:70px; height:70px; background:var(--danger); border-radius:50%; border:none; color:white; font-size:30px; cursor:pointer;">✖</button>
     </div>
 
     <script>
-        let peer, conn, myStream, currentId;
+        let peer, conn, myStream;
+        const storageKey = 'crisalida_accounts';
+        const sessionKey = 'crisalida_logged_user';
 
-        // --- 1. LOGIN COM PERSISTÊNCIA ---
+        // 1. SISTEMA DE CONTA E PERSISTÊNCIA
         function handleAuth() {
             const id = document.getElementById('user-id').value.trim().toLowerCase();
             const pass = document.getElementById('user-pass').value.trim();
-            if(!id || !pass) return alert("Preencha tudo!");
+            if(!id || !pass) return alert("Preencha os campos!");
 
-            const users = JSON.parse(localStorage.getItem('cris_users') || '{}');
+            let accounts = JSON.parse(localStorage.getItem(storageKey) || '{}');
             
-            if(users[id]) {
-                if(users[id] !== pass) return alert("Senha incorreta!");
+            if(accounts[id]) {
+                if(accounts[id] !== pass) return alert("Senha incorreta!");
             } else {
-                users[id] = pass;
-                localStorage.setItem('cris_users', JSON.stringify(users));
+                accounts[id] = pass;
+                localStorage.setItem(storageKey, JSON.stringify(accounts));
             }
 
-            currentId = id;
-            sessionStorage.setItem('cris_session', id);
-            initApp(id);
+            localStorage.setItem(sessionKey, id);
+            startSession(id);
         }
 
-        // Auto-login
-        if(sessionStorage.getItem('cris_session')) {
-            currentId = sessionStorage.getItem('cris_session');
-            initApp(currentId);
-        }
+        // Auto-login se já estiver logado
+        window.onload = () => {
+            const logged = localStorage.getItem(sessionKey);
+            if(logged) startSession(logged);
+        };
 
         function logout() {
-            sessionStorage.removeItem('cris_session');
-            location.reload();
+            localStorage.removeItem(sessionKey);
+            location.href = window.location.pathname; // Limpa URL e desloga
         }
 
-        // --- 2. PEERJS LÓGICA ---
-        function initApp(userId) {
+        // 2. INICIALIZAÇÃO DO PEER
+        function startSession(userId) {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
+            document.getElementById('display-name').innerText = userId.toUpperCase();
 
-            // Usamos o nome de usuário como o ID do Peer
+            // O ID do Peer é o próprio nome de usuário para ser estático
             peer = new Peer(userId);
 
-            peer.on('open', id => {
-                console.log("Logado como:", id);
-                checkUrlInvite();
+            peer.on('open', (id) => {
+                document.getElementById('peer-status').innerText = "Online como: " + id;
+                document.getElementById('peer-status').style.color = "var(--accent)";
+                checkInvite();
             });
 
-            peer.on('connection', c => {
-                conn = c;
-                setupChat();
+            peer.on('connection', (connection) => {
+                conn = connection;
+                bindEvents();
             });
 
-            peer.on('call', call => {
-                navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-                    myStream = stream;
-                    document.getElementById('call-ui').style.display = 'flex';
-                    document.getElementById('local-video').srcObject = stream;
-                    call.answer(stream);
-                    call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-                });
-            });
-
-            peer.on('error', err => {
-                if(err.type === 'unavailable-id') {
-                    alert("Este usuário já está online em outro lugar.");
-                    logout();
+            peer.on('call', (call) => {
+                if(confirm("Chamada recebida! Atender?")) {
+                    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
+                        myStream = stream;
+                        document.getElementById('call-ui').style.display = 'flex';
+                        document.getElementById('local-video').srcObject = stream;
+                        call.answer(stream);
+                        call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
+                    });
                 }
+            });
+
+            peer.on('error', (err) => {
+                if(err.type === 'unavailable-id') alert("Erro: Este usuário já está logado em outra aba.");
+                console.error(err);
             });
         }
 
-        function setupChat() {
-            document.getElementById('conn-status').innerText = "Conectado a: " + conn.peer;
-            document.getElementById('partner-name').innerText = conn.peer.toUpperCase();
-            
-            conn.on('data', data => {
-                render(conn.peer, data, 'received');
-            });
-
-            conn.on('close', () => {
-                document.getElementById('conn-status').innerText = "Desconectado";
+        // 3. LOGICA DE COMUNICAÇÃO
+        function bindEvents() {
+            conn.on('open', () => {
+                addMessage("Sistema", "Conexão estabelecida com " + conn.peer);
+                conn.on('data', (data) => render(conn.peer, data, 'received'));
             });
         }
 
         function send() {
             const input = document.getElementById('msg-input');
-            if(!input.value || !conn) return;
+            if(!input.value || !conn) return alert("Ninguém conectado. Envie o link primeiro!");
             conn.send(input.value);
-            render('Você', input.value, 'sent');
+            render("Você", input.value, 'sent');
             input.value = "";
         }
 
-        function render(name, msg, type) {
-            const view = document.getElementById('chat-view');
-            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        function render(user, text, type) {
+            const flow = document.getElementById('chat-flow');
             const div = document.createElement('div');
-            div.className = `bubble ${type}`;
-            div.innerHTML = `${msg} <span class="time">${time}</span>`;
-            view.appendChild(div);
-            view.scrollTop = view.scrollHeight;
+            div.className = `msg ${type}`;
+            div.innerText = text;
+            flow.appendChild(div);
+            flow.scrollTop = flow.scrollHeight;
         }
 
-        // --- 3. UTILITÁRIOS ---
-        function copyInvite() {
-            const url = `${window.location.origin}${window.location.pathname}?connect=${currentId}`;
+        function addMessage(user, text) {
+            render(user, text, 'received');
+        }
+
+        // 4. CHAMADAS E LINKS
+        function copyLink() {
+            const id = localStorage.getItem(sessionKey);
+            const url = `${window.location.origin}${window.location.pathname}?join=${id}`;
             navigator.clipboard.writeText(url);
-            const t = document.getElementById('toast');
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2000);
+            alert("Link de convite copiado! Mande para seu amigo.");
         }
 
-        function checkUrlInvite() {
-            const targetId = new URLSearchParams(window.location.search).get('connect');
-            if(targetId && targetId !== currentId) {
-                conn = peer.connect(targetId);
-                setupChat();
+        function checkInvite() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const target = urlParams.get('join');
+            const myId = localStorage.getItem(sessionKey);
+            
+            if(target && target !== myId) {
+                // Tenta conectar ao ID do link
+                conn = peer.connect(target);
+                bindEvents();
             }
         }
 
         async function startCall() {
-            if(!conn) return alert("Nenhum parceiro online.");
+            if(!conn) return alert("Conecte-se no chat antes de ligar!");
             myStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
             document.getElementById('call-ui').style.display = 'flex';
             document.getElementById('local-video').srcObject = myStream;
