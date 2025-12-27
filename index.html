@@ -3,151 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CRIMSON | ENTERPRISE</title>
+    <title>CRIMSON ENTERPRISE</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div id="app">
-    <div id="auth-screen">
-        <div style="margin-bottom: 40px; text-align: center;">
-            <i class="ri-shield-keyhole-fill" style="font-size: 64px; color: var(--primary);"></i>
-            <h1 style="font-size: 28px; font-weight: 800;">CRIMSON</h1>
-            <p style="color: var(--text-dim); font-size: 14px;">ENTERPRISE EDITION</p>
-        </div>
-        <div class="auth-content">
-            <input type="text" id="auth-id" class="field" placeholder="Usuário (ID)" style="text-align:center;">
-            <input type="password" id="auth-pass" class="field" placeholder="Senha" style="text-align:center;">
-            <button class="btn" onclick="sys.auth(false)">ENTRAR</button>
-            <button class="btn" onclick="sys.auth(true)" style="background: var(--card); border: 1px solid var(--border);">CRIAR CONTA</button>
+    <div id="auth-screen" class="full-screen">
+        <div class="auth-box">
+            <i class="ri-shield-flash-fill" style="font-size: 70px; color: var(--primary);"></i>
+            <h1>CRIMSON</h1>
+            <p>NETWORK SECURITY SYSTEM</p>
+            <input type="text" id="auth-id" placeholder="ID de Usuário" class="field">
+            <input type="password" id="auth-pass" placeholder="Senha de Acesso" class="field">
+            <div class="auth-btns">
+                <button class="btn" onclick="sys.auth(false)">LOGAR</button>
+                <button class="btn btn-outline" onclick="sys.auth(true)">REGISTRAR</button>
+            </div>
         </div>
     </div>
 
-    <header>
+    <header id="main-header">
         <div class="user-meta" onclick="sys.openView('view-me')">
             <div class="avatar" id="header-av"></div>
             <div>
-                <div id="header-name" style="font-weight: 700; font-size: 15px;">...</div>
-                <div style="font-size: 11px; color: var(--primary); font-weight: 700;">ONLINE</div>
+                <div id="header-name" style="font-weight: 800;">...</div>
+                <div class="status-badge">ONLINE</div>
             </div>
         </div>
-        <i class="ri-settings-4-line" style="font-size: 24px; color: var(--text-dim);" onclick="sys.openView('view-me')"></i>
+        <i class="ri-settings-5-fill" onclick="sys.openView('view-me')"></i>
     </header>
 
-    <div id="chat-list" style="flex:1; overflow-y:auto;"></div>
-    
-    <div class="fab-menu" id="fab-menu">
-        <div class="fab-item" onclick="sys.openView('view-create-group'); sys.toggleFab();">
-            <span style="font-size:13px; font-weight:600; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:6px;">Novo Grupo</span>
-            <div class="fab-btn-mini"><i class="ri-group-line"></i></div>
+    <div id="chat-list"></div>
+
+    <div class="fab-container">
+        <div id="fab-options" class="fab-options">
+            <div onclick="sys.openView('view-create-group')"><i class="ri-group-fill"></i></div>
+            <div onclick="sys.openView('view-add')"><i class="ri-user-add-fill"></i></div>
         </div>
-        <div class="fab-item" onclick="sys.openView('view-add'); sys.toggleFab();">
-            <span style="font-size:13px; font-weight:600; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:6px;">Novo Contato</span>
-            <div class="fab-btn-mini"><i class="ri-user-add-line"></i></div>
-        </div>
+        <div class="fab-main" onclick="sys.toggleFab()"><i class="ri-add-line" id="fab-icon"></i></div>
     </div>
-    <div class="fab" onclick="sys.toggleFab()"><i class="ri-add-line" id="fab-icon" style="transition:0.3s"></i></div>
 
     <div id="view-chat" class="view">
         <header>
-            <i class="ri-arrow-left-s-line" onclick="sys.closeChat()" style="font-size: 28px; padding-right: 10px; cursor: pointer;"></i>
-            <div style="flex:1; display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="sys.showContact()">
-                <div class="avatar" id="chat-av" style="width:36px; height:36px;"></div>
+            <i class="ri-arrow-left-s-line" onclick="sys.closeChat()" style="font-size: 30px;"></i>
+            <div class="chat-header-info" onclick="sys.showContact()">
+                <div class="avatar" id="chat-av"></div>
                 <div>
-                    <div id="chat-name" style="font-weight: 700; font-size: 15px;">Nome</div>
-                    <div id="chat-status-text" style="font-size: 11px; color: var(--text-dim);">...</div>
+                    <div id="chat-name" style="font-weight: 700;">Nome</div>
+                    <div id="chat-status-text" class="online-status">...</div>
                 </div>
             </div>
-            <div style="display:flex; gap:15px; font-size: 22px; color: var(--primary);">
+            <div class="chat-actions">
                 <i class="ri-phone-fill" onclick="sys.call(false)"></i>
                 <i class="ri-vidicon-fill" onclick="sys.call(true)"></i>
             </div>
         </header>
 
-        <div id="messages" class="chat-area"></div>
+        <div id="messages"></div>
 
-        <div id="media-preview" class="media-preview-box hidden">
-            <div id="preview-display"></div>
-            <div class="preview-controls">
-                <button class="once-btn" id="v-once-btn" onclick="sys.toggleViewOnce()">
-                    <i class="ri-eye-off-line"></i> Única: <span id="v-once-txt">OFF</span>
+        <div id="media-preview" class="hidden">
+            <div id="preview-content"></div>
+            <div class="preview-tools">
+                <button id="v-once-btn" onclick="sys.toggleViewOnce()">
+                    <i class="ri-eye-off-fill"></i> Única: <span id="v-once-status">OFF</span>
                 </button>
-                <button class="btn-circle" onclick="sys.sendMedia()"><i class="ri-send-plane-2-fill"></i></button>
-                <button class="btn-cancel" onclick="sys.cancelMedia()">Cancelar</button>
+                <div class="preview-send-row">
+                    <input type="text" id="media-caption" placeholder="Legenda..." class="field">
+                    <button class="btn-circle" onclick="sys.sendMedia()"><i class="ri-send-plane-fill"></i></button>
+                    <button class="btn-cancel" onclick="sys.cancelMedia()">X</button>
+                </div>
             </div>
         </div>
 
         <div class="input-bar">
-            <label for="file-input" class="icon-btn"><i class="ri-attachment-2"></i></label>
-            <input type="file" id="file-input" hidden accept="image/*,video/*" onchange="sys.handleFile(event)">
-            <input type="text" id="msg-input" class="field" placeholder="Mensagem...">
-            <button id="btn-audio" class="icon-btn" onmousedown="sys.startRec()" onmouseup="sys.stopRec()" ontouchstart="sys.startRec()" ontouchend="sys.stopRec()">
-                <i class="ri-mic-fill"></i>
-            </button>
-            <button id="btn-send" class="btn-circle hidden" onclick="sys.send()"><i class="ri-send-plane-fill"></i></button>
+            <label for="file-input"><i class="ri-add-line"></i></label>
+            <input type="file" id="file-input" hidden onchange="sys.handleFile(event)">
+            <input type="text" id="msg-input" placeholder="Mensagem...">
+            <button id="btn-audio" onmousedown="sys.startRec()" onmouseup="sys.stopRec()"><i class="ri-mic-2-fill"></i></button>
+            <button id="btn-send" class="hidden" onclick="sys.sendText()"><i class="ri-send-plane-2-fill"></i></button>
         </div>
     </div>
 
-    <div id="view-add" class="view">
-        <header><i class="ri-close-line" onclick="sys.closeView('view-add')" style="font-size: 28px;"></i><h3 style="flex:1; text-align:center; padding-right:28px;">Nova Conexão</h3></header>
-        <div style="padding: 30px;">
-            <p style="color:var(--text-dim); margin-bottom:10px;">ID do Usuário</p>
-            <input type="text" id="target-id" class="field" style="margin-bottom: 20px;">
-            <button class="btn" style="width:100%;" onclick="sys.addContact()">CONECTAR</button>
-        </div>
-    </div>
-
-    <div id="view-create-group" class="view">
-        <header><i class="ri-close-line" onclick="sys.closeView('view-create-group')" style="font-size: 28px;"></i><h3 style="flex:1; text-align:center; padding-right:28px;">Novo Grupo</h3></header>
-        <div style="padding: 20px; flex:1; display:flex; flex-direction:column;">
-            <input type="text" id="group-name-input" class="field" placeholder="Nome do Grupo" style="margin-bottom:20px;">
-            <div id="group-contact-list" style="flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:12px; margin-bottom:20px;"></div>
-            <button class="btn" style="width:100%;" onclick="sys.createGroup()">CRIAR GRUPO</button>
-        </div>
-    </div>
-
-    <div id="view-me" class="view">
-        <header><i class="ri-arrow-left-s-line" onclick="sys.closeView('view-me')" style="font-size: 28px;"></i><h3 style="flex:1; text-align:center; padding-right:28px;">Editar Perfil</h3></header>
-        <div class="profile-hero">
-            <div class="big-av" id="me-large-av"></div>
-            <div class="info-box"><label>NOME</label><input type="text" id="edit-name" class="field"></div>
-            <div class="info-box"><label>BIO</label><input type="text" id="edit-bio" class="field"></div>
-            <div class="info-box"><label>FOTO (URL)</label><input type="text" id="edit-pic" class="field"></div>
-            <button class="btn" style="width:100%; margin-top:20px;" onclick="sys.saveProfile()">SALVAR</button>
-            <button class="btn" style="width:100%; margin-top:15px; background:transparent; border:1px solid #ff3b30; color:#ff3b30;" onclick="sys.logout()">SAIR</button>
-        </div>
-    </div>
-
-    <div id="view-contact" class="view">
-        <header><i class="ri-arrow-left-s-line" onclick="sys.closeView('view-contact')" style="font-size: 28px;"></i><h3 style="flex:1; text-align:center; padding-right:28px;">Perfil</h3></header>
-        <div class="profile-hero">
-            <div class="big-av" id="contact-large-av"></div>
-            <h2 id="contact-real-name">Nome</h2>
-            <div id="contact-real-id" style="color:var(--primary);">@id</div>
-            <div class="info-box"><label>RECADO</label><p id="contact-real-bio">...</p></div>
-        </div>
-    </div>
-
-    <div id="call-ui" class="call-ui">
+    <div id="call-ui" class="call-overlay">
         <video id="remote-video" autoplay playsinline></video>
-        <div class="voice-info">
-            <div class="voice-avatar-container">
-                <div class="voice-avatar-pulse"></div>
-                <img id="voice-call-img" src="">
+        <div class="call-info">
+            <div class="call-avatar-wrap">
+                <div class="pulse"></div>
+                <img id="call-img" src="">
             </div>
-            <div class="call-name" id="voice-call-name">Usuário</div>
-            <div class="call-status">Chamada Crimsom</div>
+            <h2 id="call-name-ui">Conectando...</h2>
+            <p id="call-time">Criptografia de Ponta-a-Ponta</p>
         </div>
         <div class="call-controls">
-            <button class="ctrl-btn" id="btn-mic" onclick="sys.toggleMic()"><i class="ri-mic-fill"></i></button>
-            <button class="ctrl-btn end-call" onclick="sys.endCall()"><i class="ri-phone-fill"></i></button>
-            <button class="ctrl-btn" id="btn-speaker" onclick="sys.toggleSpeaker()"><i class="ri-volume-up-fill"></i></button>
+            <button class="c-btn" id="mic-btn" onclick="sys.toggleMic()"><i class="ri-mic-fill"></i></button>
+            <button class="c-btn c-end" onclick="sys.endCall()"><i class="ri-phone-fill"></i></button>
+            <button class="c-btn" id="vid-btn" onclick="sys.toggleVideo()"><i class="ri-vidicon-fill"></i></button>
         </div>
-        <video id="local-video" autoplay muted playsinline style="display:none;"></video>
+        <video id="local-video" autoplay muted playsinline></video>
     </div>
+
+    <div id="view-add" class="view modal">...</div>
+    <div id="view-create-group" class="view modal">...</div>
+    <div id="view-me" class="view modal">...</div>
 </div>
 
 <script src="script.js"></script>
