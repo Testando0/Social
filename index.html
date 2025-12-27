@@ -3,278 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crisálida Evolution</title>
+    <title>Crisálida PRO | Cloud-Sync</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg: #0b0b0e; --panel: #17171e; --accent: #00f2ff;
-            --purple: #7000ff; --text: #ffffff; --gray: #8e8e93;
+            --bg: #08080a; --side: #121217; --panel: #1c1c24;
+            --accent: #00f2ff; --purple: #7000ff; --text: #ffffff;
+            --text-dim: #a1a1aa; --border: rgba(255, 255, 255, 0.08);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { background: var(--bg); color: var(--text); height: 100dvh; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100dvh; display: flex; overflow: hidden; }
 
-        /* --- TELAS --- */
-        .screen { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--bg); z-index: 10; }
-        .active-screen { display: flex; }
+        /* LOGIN */
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { width: 100%; max-width: 380px; background: var(--side); padding: 40px; border-radius: 24px; border: 1px solid var(--border); text-align: center; }
 
-        /* --- LOGIN --- */
-        #login-screen { z-index: 100; justify-content: center; align-items: center; padding: 30px; }
-        .auth-card { width: 100%; max-width: 350px; background: var(--panel); padding: 30px; border-radius: 28px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        /* SIDEBAR */
+        #sidebar { width: 350px; background: var(--side); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: 0.3s; z-index: 100; }
+        .chat-item { padding: 16px 20px; display: flex; align-items: center; gap: 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .chat-item:hover { background: rgba(255,255,255,0.03); }
+        .avatar { width: 45px; height: 45px; border-radius: 12px; background: var(--purple); display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
-        /* --- DASHBOARD (LISTA DE CHATS) --- */
-        header { height: 60px; background: var(--panel); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid #222; }
-        .chat-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); cursor: pointer; }
-        .avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--purple); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
-        .chat-info { flex: 1; }
-        .chat-info h4 { font-size: 16px; margin-bottom: 4px; }
-        .chat-info p { font-size: 13px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* --- BOTÃO FLUTUANTE (ESTILO WHATSAPP) --- */
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: none; color: white; cursor: pointer; z-index: 20; }
-
-        /* --- CHAT REALTIME --- */
-        #chat-flow { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #0e0e12; }
-        .bubble { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.4; }
+        /* MAIN */
+        #main-chat { flex: 1; display: flex; flex-direction: column; position: relative; }
+        .chat-header { height: 70px; padding: 0 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* BUBBLES */
+        .msg { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 14px; position: relative; }
         .sent { align-self: flex-end; background: var(--purple); border-bottom-right-radius: 4px; }
-        .received { align-self: flex-start; background: var(--panel); border-bottom-left-radius: 4px; border-left: 3px solid var(--accent); }
+        .received { align-self: flex-start; background: var(--panel); border-bottom-left-radius: 4px; }
+        .status-icon { font-size: 10px; margin-left: 5px; opacity: 0.6; }
 
-        /* --- CALL HUD --- */
-        #call-ui { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { position: absolute; top: 20px; right: 20px; width: 100px; height: 150px; border: 2px solid var(--accent); border-radius: 15px; object-fit: cover; }
+        .input-area { padding: 20px; display: flex; gap: 10px; background: var(--bg); }
+        input { width: 100%; padding: 12px 18px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; color: white; outline: none; }
+        .btn-action { background: var(--purple); border: none; padding: 10px 20px; border-radius: 10px; color: white; cursor: pointer; font-weight: 600; }
 
-        input { width: 100%; padding: 14px; background: #000; border: 1px solid #333; border-radius: 12px; color: white; margin-bottom: 15px; outline: none; }
-        .btn { padding: 12px 20px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        @media (max-width: 768px) { #sidebar { width: 100%; position: absolute; } #sidebar.hidden { transform: translateX(-100%); } }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="screen active-screen">
-        <div class="auth-card">
-            <h2 style="color: var(--accent); margin-bottom: 20px;">CRISÁLIDA EVOLUTION</h2>
-            <input type="text" id="my-username" placeholder="Seu Nickname">
-            <input type="password" id="my-password" placeholder="Sua Senha">
-            <button class="btn" style="background: var(--purple); color: white; width: 100%;" onclick="doLogin()">ENTRAR</button>
-        </div>
+<div id="auth-screen">
+    <div class="auth-card">
+        <h2>Crisálida Pro</h2>
+        <p style="color: var(--text-dim); margin-bottom: 20px;">Mensagens Sincronizadas P2P</p>
+        <input type="text" id="login-user" placeholder="Seu Nickname">
+        <button onclick="auth()" class="btn-action" style="width: 100%; margin-top: 10px;">ENTRAR</button>
     </div>
+</div>
 
-    <div id="dash-screen" class="screen">
-        <header>
-            <h3 class="gamer-font">Mensagens</h3>
-            <button onclick="logout()" style="background:none; border:none; color:var(--danger); font-size:20px;">🚪</button>
-        </header>
-        <div id="chat-list" style="flex: 1; overflow-y: auto;">
+<aside id="sidebar">
+    <div style="padding: 20px;">
+        <input type="text" id="user-search" placeholder="Adicionar @usuário..." onkeyup="if(event.key==='Enter') searchUser()">
+    </div>
+    <div id="chat-list" style="flex:1; overflow-y:auto;"></div>
+</aside>
+
+<main id="main-chat">
+    <header class="chat-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button onclick="toggleSide()" id="back-btn" style="display:none; background:none; border:none; color:white;">←</button>
+            <div>
+                <h4 id="active-user">Selecione um chat</h4>
+                <span id="active-status" style="font-size:10px; color:var(--text-dim);">Offline</span>
             </div>
-        <button class="fab" onclick="showContacts()">👤</button>
-    </div>
-
-    <div id="contacts-screen" class="screen">
-        <header>
-            <button onclick="showDash()" style="background:none; border:none; color:white; font-size:20px;">←</button>
-            <h3>Contatos</h3>
-            <span></span>
-        </header>
-        <div style="padding: 20px;">
-            <input type="text" id="search-nick" placeholder="Buscar Nickname...">
-            <button class="btn" style="background: var(--accent); color: black; width: 100%;" onclick="addAndStartChat()">ADICIONAR E CONVERSAR</button>
         </div>
-        <div id="contacts-list" style="flex: 1; overflow-y: auto;">
-            </div>
+        <button onclick="copyInvite()" class="btn-action" style="background:var(--accent); color:black;">🔗 Link</button>
+    </header>
+
+    <div id="messages"></div>
+
+    <div class="input-area">
+        <input type="text" id="msg-input" placeholder="Escreva..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()" class="btn-action">🚀</button>
     </div>
+</main>
 
-    <div id="chat-screen" class="screen">
-        <header>
-            <button onclick="showDash()" style="background:none; border:none; color:white; font-size:20px;">←</button>
-            <div style="flex: 1; margin-left: 15px;">
-                <h4 id="chat-with-name">Usuário</h4>
-                <span id="chat-status" style="font-size: 11px; color: var(--accent);">P2P Ativo</span>
-            </div>
-            <button onclick="startCall()" style="background:none; border:none; color:var(--accent); font-size:20px;">📞</button>
-        </header>
-        <main id="chat-flow"></main>
-        <div style="padding: 15px; background: var(--panel); display: flex; gap: 10px;">
-            <input type="text" id="msg-input" placeholder="Mensagem..." onkeydown="if(event.key==='Enter') sendMsg()" style="margin:0;">
-            <button onclick="sendMsg()" style="background: var(--purple); border:none; color:white; width: 50px; border-radius: 12px;">🚀</button>
-        </div>
-    </div>
+<script>
+    let peer, connections = {}, myStream;
+    let myId = localStorage.getItem('cris_u');
+    let activeChat = null;
+    let history = JSON.parse(localStorage.getItem('cris_h') || '{}');
 
-    <div id="call-ui">
-        <video id="local-video" autoplay muted playsinline></video>
-        <video id="remote-video" autoplay playsinline></video>
-        <button onclick="endCall()" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); width:70px; height:70px; background:red; border:none; border-radius:50%; color:white; font-size:30px;">✖</button>
-    </div>
+    function auth() {
+        const u = document.getElementById('login-user').value.trim().toLowerCase();
+        if(!u) return;
+        localStorage.setItem('cris_u', u);
+        location.reload();
+    }
 
-    <script>
-        let peer, conn, myId, activeChatId, myStream;
-        let db = {
-            contacts: JSON.parse(localStorage.getItem('cris_contacts') || '[]'),
-            history: JSON.parse(localStorage.getItem('cris_history') || '{}')
-        };
+    if(myId) {
+        document.getElementById('auth-screen').style.display = 'none';
+        initPeer();
+    }
 
-        // --- AUTH ---
-        function doLogin() {
-            const user = document.getElementById('my-username').value.trim().toLowerCase();
-            const pass = document.getElementById('my-password').value.trim();
-            if(!user || !pass) return alert("Preencha tudo");
-            
-            myId = user;
-            localStorage.setItem('cris_logged', user);
-            initPeer();
-        }
+    function initPeer() {
+        peer = new Peer(myId);
 
-        window.onload = () => {
-            if(localStorage.getItem('cris_logged')) {
-                myId = localStorage.getItem('cris_logged');
-                initPeer();
-            }
-        };
-
-        function logout() {
-            localStorage.removeItem('cris_logged');
-            location.reload();
-        }
-
-        // --- PEER CORE ---
-        function initPeer() {
-            switchScreen('dash-screen');
-            peer = new Peer(myId);
-            
-            peer.on('open', id => renderChatList());
-            
-            peer.on('connection', c => {
-                conn = c;
-                setupConn();
-            });
-
-            peer.on('call', call => {
-                if(confirm(`Chamada de ${call.peer}`)){
-                    navigator.mediaDevices.getUserMedia({video:true, audio:true}).then(s => {
-                        myStream = s;
-                        document.getElementById('call-ui').style.display = 'flex';
-                        document.getElementById('local-video').srcObject = s;
-                        call.answer(s);
-                        call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-                    });
-                }
-            });
-        }
-
-        function setupConn() {
-            conn.on('data', data => {
-                saveMsg(conn.peer, data, 'received');
-                if(activeChatId === conn.peer) renderChat();
-                renderChatList();
-            });
-        }
-
-        // --- NAVIGATION ---
-        function switchScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-            document.getElementById(id).classList.add('active-screen');
-        }
-
-        function showDash() { switchScreen('dash-screen'); renderChatList(); }
-        function showContacts() { 
-            switchScreen('contacts-screen'); 
-            renderContacts();
-        }
-
-        // --- CHAT LOGIC ---
-        function addAndStartChat() {
-            const target = document.getElementById('search-nick').value.trim().toLowerCase();
-            if(!target || target === myId) return;
-            
-            if(!db.contacts.includes(target)) {
-                db.contacts.push(target);
-                localStorage.setItem('cris_contacts', JSON.stringify(db.contacts));
-            }
-            openChat(target);
-        }
-
-        function openChat(target) {
-            activeChatId = target;
-            document.getElementById('chat-with-name').innerText = target.toUpperCase();
-            switchScreen('chat-screen');
-            renderChat();
-            
-            // Tenta conectar
-            conn = peer.connect(target);
-            setupConn();
-        }
-
-        function sendMsg() {
-            const val = document.getElementById('msg-input').value;
-            if(!val || !conn) return;
-            conn.send(val);
-            saveMsg(activeChatId, val, 'sent');
-            renderChat();
+        peer.on('open', (id) => {
             renderChatList();
-            document.getElementById('msg-input').value = "";
-        }
+            // Tenta reconectar com todos os chats do histórico para entregar pendentes
+            Object.keys(history).forEach(peerId => connectToUser(peerId));
+        });
 
-        function saveMsg(id, text, type) {
-            if(!db.history[id]) db.history[id] = [];
-            db.history[id].push({type, text, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
-            localStorage.setItem('cris_history', JSON.stringify(db.history));
-        }
+        peer.on('connection', (conn) => {
+            handleNewConn(conn);
+        });
+    }
 
-        // --- RENDERS ---
-        function renderChatList() {
-            const list = document.getElementById('chat-list');
-            list.innerHTML = "";
-            Object.keys(db.history).forEach(id => {
-                const last = db.history[id].slice(-1)[0];
-                list.innerHTML += `
-                    <div class="chat-item" onclick="openChat('${id}')">
-                        <div class="avatar">${id[0].toUpperCase()}</div>
-                        <div class="chat-info">
-                            <h4>${id}</h4>
-                            <p>${last ? last.text : 'Sem mensagens'}</p>
-                        </div>
+    function handleNewConn(conn) {
+        connections[conn.peer] = conn;
+        
+        conn.on('open', () => {
+            if(activeChat === conn.peer) {
+                document.getElementById('active-status').innerText = "Online";
+                document.getElementById('active-status').style.color = "var(--accent)";
+            }
+            // Sincroniza mensagens que EU enviei enquanto ele estava offline
+            syncMessages(conn);
+        });
+
+        conn.on('data', (data) => {
+            if(data.type === 'msg') {
+                receiveMessage(conn.peer, data);
+                conn.send({ type: 'ack', id: data.id }); // Manda confirmação
+            } else if(data.type === 'ack') {
+                markAsDelivered(conn.peer, data.id);
+            }
+        });
+
+        conn.on('close', () => {
+            if(activeChat === conn.peer) document.getElementById('active-status').innerText = "Offline";
+            delete connections[conn.peer];
+        });
+    }
+
+    function connectToUser(peerId) {
+        if(connections[peerId]) return;
+        const conn = peer.connect(peerId);
+        handleNewConn(conn);
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('msg-input');
+        if(!input.value || !activeChat) return;
+
+        const msgObj = {
+            id: Date.now() + Math.random(),
+            type: 'msg',
+            text: input.value,
+            user: myId,
+            delivered: false
+        };
+
+        // Salva no histórico local primeiro
+        if(!history[activeChat]) history[activeChat] = [];
+        history[activeChat].push(msgObj);
+        save();
+        renderMessages();
+
+        // Tenta enviar se estiver online
+        const conn = connections[activeChat];
+        if(conn && conn.open) {
+            conn.send(msgObj);
+        } else {
+            connectToUser(activeChat); // Tenta reconectar em background
+        }
+        
+        input.value = "";
+        renderChatList();
+    }
+
+    function receiveMessage(peerId, data) {
+        if(!history[peerId]) history[peerId] = [];
+        // Evita duplicatas
+        if(!history[peerId].find(m => m.id === data.id)) {
+            history[peerId].push({...data, delivered: true});
+            save();
+            if(activeChat === peerId) renderMessages();
+            renderChatList();
+        }
+    }
+
+    function syncMessages(conn) {
+        const pendentes = (history[conn.peer] || []).filter(m => !m.delivered && m.user === myId);
+        pendentes.forEach(m => conn.send(m));
+    }
+
+    function markAsDelivered(peerId, msgId) {
+        const msg = history[peerId].find(m => m.id === msgId);
+        if(msg) {
+            msg.delivered = true;
+            save();
+            if(activeChat === peerId) renderMessages();
+        }
+    }
+
+    function searchUser() {
+        const val = document.getElementById('user-search').value.trim().toLowerCase();
+        if(val && val !== myId) {
+            openChat(val);
+            document.getElementById('user-search').value = "";
+        }
+    }
+
+    function openChat(peerId) {
+        activeChat = peerId;
+        document.getElementById('active-user').innerText = "@" + peerId;
+        document.getElementById('active-status').innerText = connections[peerId] ? "Online" : "Offline";
+        if(window.innerWidth < 768) toggleSide();
+        renderMessages();
+        connectToUser(peerId);
+    }
+
+    function renderMessages() {
+        const box = document.getElementById('messages');
+        box.innerHTML = "";
+        (history[activeChat] || []).forEach(m => {
+            const div = document.createElement('div');
+            const isMe = m.user === myId;
+            div.className = `msg ${isMe ? 'sent' : 'received'}`;
+            div.innerHTML = `${m.text} <span class="status-icon">${isMe ? (m.delivered ? '✓✓' : '🕒') : ''}</span>`;
+            box.appendChild(div);
+        });
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function renderChatList() {
+        const list = document.getElementById('chat-list');
+        list.innerHTML = "";
+        Object.keys(history).forEach(id => {
+            const last = history[id][history[id].length - 1];
+            list.innerHTML += `
+                <div class="chat-item" onclick="openChat('${id}')">
+                    <div class="avatar">${id[0].toUpperCase()}</div>
+                    <div style="flex:1">
+                        <b>${id}</b>
+                        <p style="font-size:12px; color:var(--text-dim)">${last ? last.text.substring(0,20) : ''}</p>
                     </div>
-                `;
-            });
-        }
+                </div>`;
+        });
+    }
 
-        function renderContacts() {
-            const list = document.getElementById('contacts-list');
-            list.innerHTML = "";
-            db.contacts.forEach(id => {
-                list.innerHTML += `
-                    <div class="chat-item" onclick="openChat('${id}')">
-                        <div class="avatar" style="background:#444">${id[0].toUpperCase()}</div>
-                        <div class="chat-info"><h4>${id}</h4></div>
-                    </div>
-                `;
-            });
-        }
-
-        function renderChat() {
-            const flow = document.getElementById('chat-flow');
-            flow.innerHTML = "";
-            (db.history[activeChatId] || []).forEach(m => {
-                flow.innerHTML += `<div class="bubble ${m.type}">${m.text}</div>`;
-            });
-            flow.scrollTop = flow.scrollHeight;
-        }
-
-        // --- CALLS ---
-        async function startCall() {
-            myStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
-            document.getElementById('call-ui').style.display = 'flex';
-            document.getElementById('local-video').srcObject = myStream;
-            const call = peer.call(activeChatId, myStream);
-            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-        }
-
-        function endCall() {
-            document.getElementById('call-ui').style.display = 'none';
-            if(myStream) myStream.getTracks().forEach(t => t.stop());
-        }
-    </script>
+    function save() { localStorage.setItem('cris_h', JSON.stringify(history)); }
+    function toggleSide() { 
+        document.getElementById('sidebar').classList.toggle('hidden');
+        document.getElementById('back-btn').style.display = document.getElementById('sidebar').classList.contains('hidden') ? 'block' : 'none';
+    }
+    function copyInvite() {
+        const url = window.location.origin + window.location.pathname + "?u=" + myId;
+        navigator.clipboard.writeText(url);
+        alert("Link copiado!");
+    }
+</script>
 </body>
 </html>
