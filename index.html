@@ -3,670 +3,528 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CRIMSON | Enterprise Encrypted Messenger</title>
+    <title>CRIMSON | Enterprise Encrypted Link</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* --- DESIGN TOKENS --- */
+        /* --- SYSTEM DESIGN TOKENS --- */
         :root {
-            --primary: #dc143c; /* Crimson Puro */
-            --primary-glow: rgba(220, 20, 60, 0.4);
-            --bg-deep: #050505;
-            --surface: rgba(20, 20, 23, 0.7);
-            --surface-light: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --text: #ffffff;
-            --text-secondary: #9ca3af;
+            --primary: #e11d48; /* Crimson Red Premium */
+            --primary-dark: #be123c;
+            --primary-glow: rgba(225, 29, 72, 0.5);
+            --bg-body: #000000;
+            --bg-card: #09090b;
+            --bg-surface: #18181b;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(20, 20, 23, 0.85);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
             --success: #10b981;
-            --glass: blur(20px) saturate(180%);
-            --radius-lg: 24px;
-            --radius-md: 16px;
-            --shadow-elevation: 0 20px 50px -10px rgba(0,0,0,0.7);
-            --app-width: 480px;
+            --danger: #f43f5e;
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --ease: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        /* --- RESET & BASE --- */
+        /* --- GLOBAL RESET --- */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { 
-            background-color: var(--bg-deep); 
-            background-image: radial-gradient(circle at 50% 0%, #2a0a10 0%, #000000 70%);
-            color: var(--text); 
-            font-family: 'Inter', sans-serif; 
-            height: 100dvh; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            overflow: hidden; 
+        body {
+            background: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font);
+            height: 100dvh;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% -20%, #2f0812 0%, #000000 60%);
         }
 
-        /* --- SCROLLBAR --- */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
-        /* --- APP SHELL --- */
-        #app-container { 
-            width: 100%; 
-            height: 100%; 
-            position: relative; 
-            background: var(--bg-deep); 
-            overflow: hidden;
+        /* --- APP CONTAINER (MOBILE FIRST + DESKTOP ADAPTIVE) --- */
+        #app {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: var(--bg-card);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 0 0 transparent;
         }
 
-        /* Desktop Mode Enhancements */
-        @media (min-width: 600px) {
-            #app-container {
-                width: var(--app-width);
-                height: 90vh;
-                border-radius: var(--radius-lg);
-                border: 1px solid var(--border);
-                box-shadow: var(--shadow-elevation);
-            }
-            body::before {
-                content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-                background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-                opacity: 0.4; z-index: -1; animation: bgMove 120s linear infinite;
+        @media (min-width: 640px) {
+            body { align-items: center; background-image: radial-gradient(circle at 50% 50%, #2f0812 0%, #050505 100%); }
+            #app {
+                width: 420px;
+                height: 85vh;
+                max-height: 900px;
+                border-radius: 24px;
+                border: 1px solid var(--glass-border);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
             }
         }
-        @keyframes bgMove { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- COMMONS --- */
-        .view { 
-            position: absolute; inset: 0; background: var(--bg-deep); z-index: 10; 
-            display: flex; flex-direction: column; 
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            transform: translateX(100%);
+        /* --- UI COMPONENTS --- */
+        .view {
+            position: absolute; inset: 0; background: var(--bg-card); z-index: 10;
+            display: flex; flex-direction: column; opacity: 0; pointer-events: none; transform: scale(0.96);
+            transition: opacity 0.3s ease, transform 0.3s var(--ease);
         }
-        .view.active { transform: translateX(0); }
-        .view.fade-out { transform: scale(0.95); opacity: 0; pointer-events: none; transition: 0.3s; }
+        .view.active { opacity: 1; pointer-events: auto; transform: scale(1); z-index: 20; }
         
-        .header { 
-            padding: 16px 20px; 
-            display: flex; align-items: center; justify-content: space-between; 
-            background: rgba(5, 5, 5, 0.85); backdrop-filter: var(--glass);
-            border-bottom: 1px solid var(--border); z-index: 50;
-            height: 70px;
+        /* Headers */
+        header {
+            height: 64px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
+            background: var(--glass-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border); z-index: 50;
+        }
+        .header-title { font-weight: 700; font-size: 16px; letter-spacing: -0.02em; }
+        
+        /* Buttons */
+        .btn { border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; font-weight: 600; border-radius: 12px; }
+        .btn:active { transform: scale(0.95); }
+        .btn-icon { width: 40px; height: 40px; background: transparent; color: var(--text-main); font-size: 20px; border-radius: 50%; }
+        .btn-icon:hover { background: rgba(255,255,255,0.05); }
+        .btn-primary { 
+            background: var(--primary); color: white; padding: 14px 24px; font-size: 15px; width: 100%; 
+            box-shadow: 0 4px 20px var(--primary-glow);
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-float {
+            position: absolute; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 18px;
+            background: var(--primary); color: white; font-size: 24px; box-shadow: 0 8px 30px rgba(225, 29, 72, 0.4);
+            z-index: 100;
         }
 
-        .btn { border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-weight: 600; border-radius: 12px; }
-        .btn:active { transform: scale(0.96); }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px var(--primary-glow); }
-        .btn-primary:hover { background: #b01030; }
-        .btn-icon { background: transparent; color: var(--text); font-size: 24px; padding: 8px; border-radius: 50%; }
-        .btn-icon:hover { background: var(--surface-light); }
+        /* Inputs */
+        .input-box { background: var(--bg-surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px 16px; color: white; width: 100%; font-size: 15px; transition: 0.2s; }
+        .input-box:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.2); }
 
-        .input-group { position: relative; width: 100%; }
-        .field { 
-            width: 100%; background: var(--surface-light); border: 1px solid var(--border); 
-            color: #fff; padding: 16px; border-radius: 14px; font-size: 15px; 
-            transition: 0.3s; 
-        }
-        .field:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(220, 20, 60, 0.2); }
-
-        .avatar { 
-            width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #1a1a1a, #0a0a0a); 
-            border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; 
-            font-weight: 700; color: var(--primary); overflow: hidden; flex-shrink: 0; position: relative;
-        }
+        /* Avatars */
+        .avatar { width: 44px; height: 44px; border-radius: 14px; background: #27272a; display: grid; place-items: center; overflow: hidden; font-weight: 700; color: var(--text-muted); border: 1px solid var(--glass-border); flex-shrink: 0; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .avatar.online::after {
-            content: ''; position: absolute; bottom: 3px; right: 3px; width: 10px; height: 10px;
-            background: var(--success); border-radius: 50%; border: 2px solid #000;
-        }
-
-        /* --- LOGIN SCREEN --- */
-        #auth-screen { 
-            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            padding: 40px; text-align: center; background: radial-gradient(circle at center, #1a0508 0%, #000000 100%);
-        }
-        .logo-area { margin-bottom: 40px; position: relative; }
-        .logo-area i { font-size: 64px; color: var(--primary); filter: drop-shadow(0 0 20px var(--primary)); }
-        .brand-title { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-top: 15px; }
-        .brand-subtitle { color: var(--text-secondary); font-size: 14px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 40px; }
-
-        /* --- HOME LIST --- */
-        .chat-list { flex: 1; overflow-y: auto; padding-top: 10px; }
-        .chat-item { 
-            padding: 16px 20px; display: flex; gap: 16px; align-items: center; 
-            transition: 0.2s; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02);
-        }
-        .chat-item:hover { background: var(--surface-light); }
-        .chat-info { flex: 1; min-width: 0; }
-        .chat-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .chat-name { font-weight: 600; font-size: 16px; }
-        .chat-time { font-size: 12px; color: var(--text-secondary); }
-        .chat-preview { font-size: 14px; color: var(--text-secondary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-
-        .fab { 
-            position: absolute; bottom: 30px; right: 30px; width: 60px; height: 60px; 
-            background: var(--primary); border-radius: 20px; display: flex; align-items: center; justify-content: center; 
-            font-size: 26px; color: #fff; box-shadow: 0 10px 25px var(--primary-glow); 
-            cursor: pointer; z-index: 90; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .fab:hover { transform: scale(1.1) rotate(90deg); }
-
-        /* --- CHAT AREA --- */
-        #chat-flow { 
-            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; 
-            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .msg.sent { 
-            align-self: flex-end; background: var(--primary); color: white; 
-            border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(220, 20, 60, 0.2);
-        }
-        .msg.received { 
-            align-self: flex-start; background: #1a1a1a; border: 1px solid var(--border); 
-            border-bottom-left-radius: 4px; color: #eee;
-        }
-        .msg-time { font-size: 10px; opacity: 0.7; display: block; margin-top: 4px; text-align: right; }
-
-        .chat-input-area { 
-            padding: 16px; background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); 
-            border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center;
-        }
+        /* --- SPECIFIC VIEWS --- */
         
-        /* --- CALL UI --- */
-        #call-ui { 
-            position: fixed; inset: 0; background: #000; z-index: 2000; 
-            display: none; flex-direction: column; animation: fadeIn 0.3s;
-        }
-        #call-ui.active { display: flex; }
-        .video-wrapper { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { 
-            position: absolute; bottom: 120px; right: 20px; width: 110px; height: 160px; 
-            background: #222; border-radius: 16px; border: 2px solid rgba(255,255,255,0.2); 
-            object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 2001; transition: 0.3s;
+        /* Login */
+        #view-auth { align-items: center; justify-content: center; padding: 40px; text-align: center; background: radial-gradient(circle at 50% 0%, #1e0508 0%, #09090b 80%); }
+        .brand-logo { font-size: 56px; color: var(--primary); margin-bottom: 24px; filter: drop-shadow(0 0 20px var(--primary-glow)); animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* Chat List */
+        .chat-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .chat-tile { padding: 12px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: 0.2s; }
+        .chat-tile:hover { background: rgba(255,255,255,0.03); }
+        .tile-content { flex: 1; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; }
+        .chat-tile:last-child .tile-content { border-bottom: none; }
+
+        /* Messages */
+        #chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 40px 40px; background-position: -19px -19px; opacity: 1; }
+        #chat-area::before { content: ""; position: absolute; inset: 0; background: var(--bg-card); opacity: 0.96; pointer-events: none; }
+        .msg { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.5; position: relative; z-index: 2; animation: popIn 0.3s var(--ease); }
+        .msg.sent { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3); }
+        .msg.received { align-self: flex-start; background: var(--bg-surface); border: 1px solid var(--glass-border); border-bottom-left-radius: 4px; }
+        @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* Call Interface - THE FIX */
+        #view-call { background: #000; z-index: 100; }
+        .video-stage { flex: 1; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        .local-pip { 
+            position: absolute; bottom: 100px; right: 20px; width: 100px; height: 150px; 
+            border-radius: 16px; border: 2px solid rgba(255,255,255,0.1); background: #1a1a1a;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); overflow: hidden; z-index: 102; transition: 0.3s;
         }
         .call-controls { 
-            height: 100px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); 
-            display: flex; align-items: center; justify-content: center; gap: 30px; 
-            position: absolute; bottom: 0; width: 100%; z-index: 2002;
+            height: 90px; background: rgba(0,0,0,0.6); backdrop-filter: blur(20px); 
+            display: flex; align-items: center; justify-content: center; gap: 24px; width: 100%; 
+            position: absolute; bottom: 0; z-index: 103;
         }
-        .call-btn { width: 60px; height: 60px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: white; transition: 0.2s; }
-        .call-btn.end { background: #ff3b30; transform: rotate(135deg); }
-        .call-btn.end:hover { background: #d32f2f; }
+        .ctrl-btn { width: 56px; height: 56px; border-radius: 50%; border: none; font-size: 24px; color: white; background: rgba(255,255,255,0.15); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .ctrl-btn.hangup { background: var(--danger); }
+        .ctrl-btn:active { transform: scale(0.9); }
 
-        /* --- UTILS --- */
-        .toast { 
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); 
-            background: #fff; color: #000; padding: 12px 24px; border-radius: 30px; 
-            font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px;
-        }
+        /* Toast */
+        .toast { position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); background: white; color: black; padding: 12px 24px; border-radius: 30px; font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none; transition: 0.4s var(--ease); z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-        .profile-header { padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border); }
-        .large-av { width: 120px; height: 120px; border-radius: 40px; margin: 0 auto 20px; border: 3px solid var(--primary); overflow: hidden; background: #111; display:flex; align-items:center; justify-content:center; font-size: 40px; color: var(--primary);}
-        .large-av img { width: 100%; height: 100%; object-fit: cover; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div id="app-container">
-    <div id="toast" class="toast"><i class="ri-checkbox-circle-fill" style="color:var(--success)"></i> <span id="toast-msg">Mensagem</span></div>
+<div id="app">
+    <div id="toast" class="toast"><i class="ri-information-fill"></i> <span id="toast-msg">Mensagem</span></div>
 
-    <div id="auth-screen" class="view active">
-        <div class="logo-area">
-            <i class="ri-shield-keyhole-fill"></i>
-        </div>
-        <h1 class="brand-title">CRIMSON</h1>
-        <p class="brand-subtitle">Enterprise Edition</p>
+    <div id="view-auth" class="view active">
+        <i class="ri-shield-flash-fill brand-logo"></i>
+        <h1 style="font-weight: 800; font-size: 32px; letter-spacing: -1px; margin-bottom: 8px;">CRIMSON</h1>
+        <p style="color: var(--text-muted); margin-bottom: 40px; font-size: 14px;">Enterprise Secure Communication</p>
         
-        <div style="width: 100%; max-width: 320px;">
-            <div class="input-group" style="margin-bottom: 20px;">
-                <input type="text" id="my-id" class="field" placeholder="Crie seu ID Exclusivo" autocomplete="off">
-            </div>
-            <button class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px;" onclick="app.login()">
-                ACESAR SISTEMA <i class="ri-arrow-right-line" style="margin-left: 8px;"></i>
+        <div style="width: 100%; max-width: 280px;">
+            <input type="text" id="my-id-input" class="input-box" placeholder="Escolha seu ID" style="text-align: center; margin-bottom: 16px;">
+            <button class="btn btn-primary" onclick="sys.login()">
+                ENTRAR NO SISTEMA <i class="ri-arrow-right-line" style="margin-left: 8px;"></i>
             </button>
         </div>
-        <p style="margin-top: 30px; font-size: 12px; color: var(--text-secondary); opacity: 0.5;">End-to-End PeerJS Encryption</p>
+        <p id="env-warning" style="margin-top: 30px; color: #fbbf24; font-size: 11px; display: none;">
+            <i class="ri-alert-fill"></i> ATENÇÃO: Use HTTPS para vídeo.
+        </p>
     </div>
 
-    <div id="view-home" class="view" style="z-index: 20;">
-        <header class="header">
-            <div style="display: flex; align-items: center; gap: 12px;" onclick="app.nav('view-profile')">
-                <div class="avatar online" id="home-av">?</div>
+    <div id="view-home" class="view">
+        <header>
+            <div style="display: flex; align-items: center; gap: 12px;" onclick="sys.copyId()">
+                <div class="avatar" id="my-avatar">?</div>
                 <div>
-                    <div id="home-name" style="font-weight: 700; font-size: 15px; line-height: 1.2;">Usuário</div>
-                    <div style="font-size: 11px; color: var(--success); font-weight: 600; letter-spacing: 0.5px;">CONECTADO</div>
+                    <div id="my-name-display" style="font-weight: 700; font-size: 15px;">...</div>
+                    <div style="font-size: 11px; color: var(--success); font-weight: 600;">ONLINE • SECURE</div>
                 </div>
             </div>
-            <button class="btn btn-icon" onclick="app.copyId()"><i class="ri-file-copy-line"></i></button>
+            <button class="btn btn-icon" onclick="sys.logout()"><i class="ri-logout-box-r-line" style="color: var(--danger)"></i></button>
         </header>
-
-        <div id="recent-chats" class="chat-list">
+        <div id="chat-list" class="chat-list">
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-muted); opacity:0.5;">
+                <i class="ri-chat-1-line" style="font-size: 40px; margin-bottom:10px;"></i>
+                <p>Nenhuma conversa recente</p>
             </div>
-
-        <div class="fab" onclick="app.nav('view-new')"><i class="ri-add-line"></i></div>
+        </div>
+        <button class="btn btn-float" onclick="sys.openNewChatModal()"><i class="ri-add-line"></i></button>
     </div>
 
-    <div id="view-chat" class="view" style="z-index: 30;">
-        <header class="header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <button class="btn btn-icon" onclick="app.back()"><i class="ri-arrow-left-s-line"></i></button>
-                <div class="avatar" id="chat-av" style="width: 36px; height: 36px; border-radius: 10px;" onclick="app.showContactInfo()"></div>
-                <div style="overflow: hidden;">
-                    <div id="chat-header-name" style="font-weight: 700; font-size: 15px;">Nome</div>
-                    <div style="font-size: 10px; color: var(--primary); font-weight: 700;">ENCRYPTED CHANNEL</div>
+    <div id="view-chat" class="view">
+        <header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <button class="btn btn-icon" onclick="sys.nav('view-home')"><i class="ri-arrow-left-s-line" style="font-size: 24px;"></i></button>
+                <div class="avatar" id="chat-avatar" style="width: 36px; height: 36px; margin-right: 8px;">?</div>
+                <div>
+                    <div id="chat-title" style="font-weight: 700; font-size: 15px;">Usuário</div>
+                    <div style="font-size: 10px; color: var(--primary); font-weight: 700;">CRIPTOGRAFADO</div>
                 </div>
             </div>
-            <div style="display: flex; gap: 5px;">
-                <button class="btn btn-icon" onclick="app.startCall(false)"><i class="ri-phone-fill"></i></button>
-                <button class="btn btn-icon" onclick="app.startCall(true)"><i class="ri-vidicon-fill"></i></button>
+            <div style="display: flex;">
+                <button class="btn btn-icon" onclick="sys.initCall(false)"><i class="ri-phone-fill"></i></button>
+                <button class="btn btn-icon" onclick="sys.initCall(true)"><i class="ri-vidicon-fill"></i></button>
             </div>
         </header>
-
-        <div id="chat-flow"></div>
-
-        <div class="chat-input-area">
-            <input type="text" id="msg-input" class="field" placeholder="Digite uma mensagem..." style="border-radius: 25px; padding: 12px 20px;">
-            <button class="btn btn-primary" style="width: 48px; height: 48px; border-radius: 50%;" onclick="app.sendMsg()">
-                <i class="ri-send-plane-fill"></i>
-            </button>
+        <div id="chat-area"></div>
+        <div style="padding: 16px; background: rgba(20,20,23,0.95); border-top: 1px solid var(--glass-border); display: flex; gap: 10px;">
+            <input type="text" id="msg-input" class="input-box" placeholder="Digite sua mensagem...">
+            <button class="btn btn-primary" style="width: 50px; padding: 0;" onclick="sys.sendMsg()"><i class="ri-send-plane-fill"></i></button>
         </div>
     </div>
 
-    <div id="view-new" class="view" style="z-index: 40;">
-        <header class="header">
-            <button class="btn btn-icon" onclick="app.back()"><i class="ri-close-line"></i></button>
-            <h3 style="font-weight: 700;">Nova Conexão</h3>
-            <div style="width: 40px;"></div>
-        </header>
-        <div style="padding: 30px;">
-            <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 14px;">Digite o ID do usuário para iniciar uma conexão segura.</p>
-            <input type="text" id="target-id" class="field" placeholder="ID do Destinatário" style="margin-bottom: 20px;">
-            <button class="btn btn-primary" style="width: 100%; padding: 16px;" onclick="app.addContact()">INICIAR CHAT</button>
-        </div>
-    </div>
-
-    <div id="view-profile" class="view" style="z-index: 40;">
-        <header class="header">
-            <button class="btn btn-icon" onclick="app.back()"><i class="ri-arrow-left-s-line"></i></button>
-            <h3 style="font-weight: 700;">Configurações</h3>
-            <button class="btn btn-icon" onclick="app.logout()" style="color: #ff3b30;"><i class="ri-logout-box-r-line"></i></button>
-        </header>
-        <div class="profile-header">
-            <div id="profile-large-av" class="large-av"></div>
-            <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 20px;">ID: <span id="display-my-id"></span></p>
-            
-            <div style="text-align: left; display: flex; flex-direction: column; gap: 15px;">
-                <div>
-                    <label style="font-size: 12px; font-weight: 600; margin-left: 10px; margin-bottom: 5px; display: block;">Nome de Exibição</label>
-                    <input type="text" id="set-name" class="field">
-                </div>
-                <div>
-                    <label style="font-size: 12px; font-weight: 600; margin-left: 10px; margin-bottom: 5px; display: block;">URL da Foto</label>
-                    <input type="text" id="set-pic" class="field" placeholder="https://...">
-                </div>
-                <button class="btn btn-primary" style="width: 100%; padding: 16px; margin-top: 10px;" onclick="app.saveProfile()">SALVAR PERFIL</button>
+    <div id="view-new" class="view" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 150;">
+        <div style="margin: auto; background: var(--bg-card); padding: 24px; border-radius: 24px; width: 90%; border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <h3 style="margin-bottom: 16px;">Nova Conexão</h3>
+            <input type="text" id="new-chat-id" class="input-box" placeholder="ID do Usuário" style="margin-bottom: 16px;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" style="flex: 1; background: var(--bg-surface); color: white;" onclick="sys.nav('view-home')">Cancelar</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="sys.startNewChat()">Iniciar</button>
             </div>
         </div>
     </div>
 
-    <div id="call-ui">
-        <div class="video-wrapper">
+    <div id="view-call" class="view">
+        <div class="video-stage">
             <video id="remote-video" autoplay playsinline></video>
-            <div id="call-status-overlay" style="position: absolute; text-align: center;">
-                <div class="large-av" id="call-avatar-placeholder" style="border-color: white;"></div>
-                <h2 id="call-status-text" style="font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">Conectando...</h2>
+            
+            <div id="call-status" style="position: absolute; text-align: center; z-index: 101;">
+                <div class="avatar" style="width: 80px; height: 80px; margin: 0 auto 16px; font-size: 32px; border: 2px solid white;">?</div>
+                <h2 style="text-shadow: 0 2px 10px rgba(0,0,0,0.8);">Conectando...</h2>
+            </div>
+
+            <div class="local-pip">
+                <video id="local-video" autoplay playsinline muted></video>
             </div>
         </div>
-        <video id="local-video" autoplay muted playsinline></video>
+
         <div class="call-controls">
-            <button class="call-btn" style="background: rgba(255,255,255,0.2);" onclick="app.toggleMute()"><i class="ri-mic-line"></i></button>
-            <button class="call-btn end" onclick="app.endCall()"><i class="ri-add-line"></i></button>
-            <button class="call-btn" style="background: rgba(255,255,255,0.2);" onclick="app.switchCam()"><i class="ri-camera-switch-line"></i></button>
+            <button class="ctrl-btn" onclick="sys.toggleMute()" id="btn-mute"><i class="ri-mic-fill"></i></button>
+            <button class="ctrl-btn hangup" onclick="sys.endCall()"><i class="ri-phone-end-fill"></i></button>
+            <button class="ctrl-btn" onclick="sys.switchCam()"><i class="ri-camera-switch-line"></i></button>
         </div>
     </div>
-
 </div>
 
 <script>
-const app = {
+/* --- CRIMSON ENGINE V3.0 (STABLE) --- */
+const sys = {
     peer: null,
-    uid: localStorage.getItem('cr_uid'),
+    myId: localStorage.getItem('cr_uid'),
+    activeChat: null,
+    currentCall: null,
+    localStream: null,
     data: {
-        profile: JSON.parse(localStorage.getItem('cr_profile') || '{"name":"","pic":""}'),
-        friends: JSON.parse(localStorage.getItem('cr_friends') || '{}'),
         chats: JSON.parse(localStorage.getItem('cr_chats') || '{}')
     },
-    state: { activeChat: null, call: null, localStream: null, isMuted: false },
 
-    // --- SYSTEM ---
+    // --- INICIALIZAÇÃO ---
     init() {
-        if (this.uid) {
-            document.getElementById('auth-screen').classList.add('fade-out');
-            setTimeout(() => {
-                document.getElementById('auth-screen').classList.remove('active', 'fade-out');
-                this.connectNetwork();
-                this.renderHome();
-                this.updateMeUI();
-            }, 300);
+        // Verifica ambiente para evitar erros de câmera
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            document.getElementById('env-warning').style.display = 'block';
         }
+
+        if (this.myId) {
+            this.connectNetwork();
+            this.nav('view-home');
+            this.updateUI();
+        }
+
+        // Listeners globais
+        document.getElementById('msg-input').onkeydown = (e) => e.key === 'Enter' && this.sendMsg();
         
-        // Enter key listeners
-        document.getElementById('msg-input').addEventListener('keypress', e => e.key === 'Enter' && this.sendMsg());
-        document.getElementById('my-id').addEventListener('keypress', e => e.key === 'Enter' && this.login());
+        // CORREÇÃO TELA PRETA: Forçar play quando metadados carregarem
+        const videos = document.querySelectorAll('video');
+        videos.forEach(v => {
+            v.onloadedmetadata = () => {
+                v.play().catch(e => console.log("Autoplay bloqueado pelo navegador (interaja com a página primeiro).", e));
+            };
+        });
     },
 
     login() {
-        const id = document.getElementById('my-id').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (id.length < 3) return this.toast('ID muito curto (min 3 chars)');
+        const id = document.getElementById('my-id-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (id.length < 3) return this.notify("ID muito curto (min 3 letras)", "error");
         localStorage.setItem('cr_uid', id);
         location.reload();
     },
 
+    // --- REDE PEER-TO-PEER ---
     connectNetwork() {
-        this.peer = new Peer(this.uid);
-        
+        this.peer = new Peer(this.myId, { debug: 2 });
+
         this.peer.on('open', (id) => {
-            this.toast(`Conectado como: ${id}`);
+            document.getElementById('my-name-display').innerText = id.toUpperCase();
+            document.getElementById('my-avatar').innerText = id[0].toUpperCase();
         });
 
         this.peer.on('connection', conn => {
-            conn.on('data', data => this.handleData(conn.peer, data));
-            conn.on('open', () => this.sendProfile(conn));
+            conn.on('data', data => {
+                if(data.type === 'msg') {
+                    this.saveMsg(conn.peer, conn.peer, data.text);
+                    if(this.activeChat !== conn.peer) this.notify(`Mensagem de ${conn.peer}`);
+                }
+            });
         });
 
         this.peer.on('call', call => {
-            if(confirm(`Recebendo chamada de ${this.getName(call.peer)}. Aceitar?`)) {
+            if(confirm(`Recebendo chamada de vídeo de ${call.peer}. Atender?`)) {
                 this.answerCall(call);
             } else {
                 call.close();
             }
         });
 
-        this.peer.on('error', err => this.toast('Erro de conexão: ' + err.type));
+        this.peer.on('error', err => {
+            console.error(err);
+            if(err.type === 'peer-unavailable') this.notify("Usuário offline ou ID incorreto.");
+            else this.notify("Erro de conexão. Tente recarregar.");
+        });
     },
 
-    // --- MESSAGING ---
-    handleData(pid, data) {
-        if (data.type === 'profile') {
-            this.data.friends[pid] = { name: data.name, pic: data.pic };
+    // --- MENSAGENS ---
+    startNewChat() {
+        const id = document.getElementById('new-chat-id').value.trim().toLowerCase();
+        if(id && id !== this.myId) {
+            if(!this.data.chats[id]) this.data.chats[id] = [];
             this.save();
-            this.renderHome();
-            if (this.state.activeChat === pid) this.updateHeaderUI(pid);
+            this.openChat(id);
+        } else {
+            this.notify("ID Inválido");
         }
-        if (data.type === 'msg') {
-            this.pushMsg(pid, pid, data.text);
-            if (this.state.activeChat !== pid) this.toast(`Nova mensagem de ${this.getName(pid)}`);
-        }
+    },
+
+    openChat(id) {
+        this.activeChat = id;
+        document.getElementById('chat-title').innerText = id;
+        document.getElementById('chat-avatar').innerText = id[0].toUpperCase();
+        this.renderChat();
+        this.nav('view-chat');
     },
 
     sendMsg() {
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
-        if (!text || !this.state.activeChat) return;
+        if(!text || !this.activeChat) return;
 
-        this.pushMsg(this.state.activeChat, this.uid, text);
+        // 1. Salva local
+        this.saveMsg(this.activeChat, this.myId, text);
         
-        const conn = this.peer.connect(this.state.activeChat);
-        conn.on('open', () => {
-            conn.send({ type: 'msg', text });
-            this.sendProfile(conn);
-        });
-
-        input.value = '';
+        // 2. Envia rede
+        const conn = this.peer.connect(this.activeChat);
+        conn.on('open', () => conn.send({ type: 'msg', text: text }));
+        
+        input.value = "";
     },
 
-    pushMsg(chatId, senderId, text) {
-        if (!this.data.chats[chatId]) this.data.chats[chatId] = [];
-        this.data.chats[chatId].push({ 
-            sid: senderId, 
-            text, 
-            ts: Date.now() 
-        });
+    saveMsg(chatId, senderId, text) {
+        if(!this.data.chats[chatId]) this.data.chats[chatId] = [];
+        this.data.chats[chatId].push({ sender: senderId, text: text, ts: Date.now() });
         this.save();
-        this.renderHome();
-        if (this.state.activeChat === chatId) this.renderChat();
+        if(this.activeChat === chatId) this.renderChat();
+        this.renderHomeList();
     },
 
-    // --- UI RENDERING ---
-    renderHome() {
-        const list = document.getElementById('recent-chats');
-        list.innerHTML = '';
-        
-        const sortedIds = Object.keys(this.data.chats).sort((a, b) => {
+    renderChat() {
+        const area = document.getElementById('chat-area');
+        area.innerHTML = "";
+        const msgs = this.data.chats[this.activeChat] || [];
+        msgs.forEach(m => {
+            const isMe = m.sender === this.myId;
+            area.innerHTML += `<div class="msg ${isMe ? 'sent' : 'received'}">${m.text}</div>`;
+        });
+        area.scrollTop = area.scrollHeight;
+    },
+
+    renderHomeList() {
+        const list = document.getElementById('chat-list');
+        const ids = Object.keys(this.data.chats).sort((a,b) => {
             const lastA = this.data.chats[a].at(-1)?.ts || 0;
             const lastB = this.data.chats[b].at(-1)?.ts || 0;
             return lastB - lastA;
         });
 
-        if(sortedIds.length === 0) {
-            list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-secondary); opacity:0.5"><i class="ri-chat-1-line" style="font-size:40px"></i><br>Sem conversas</div>';
-        }
+        if(ids.length === 0) return; // Mantém placeholder
 
-        sortedIds.forEach(id => {
-            const f = this.data.friends[id] || {};
-            const msgs = this.data.chats[id];
-            const last = msgs[msgs.length - 1];
-            const time = new Date(last.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            const html = `
-                <div class="chat-item" onclick="app.openChat('${id}')">
-                    <div class="avatar">${f.pic ? `<img src="${f.pic}">` : id[0].toUpperCase()}</div>
-                    <div class="chat-info">
-                        <div class="chat-top">
-                            <span class="chat-name">${f.name || id}</span>
-                            <span class="chat-time">${time}</span>
-                        </div>
-                        <div class="chat-preview">${last.sid === this.uid ? 'Você: ' : ''}${last.text}</div>
+        list.innerHTML = "";
+        ids.forEach(id => {
+            const lastMsg = this.data.chats[id].at(-1)?.text || "Nova conversa";
+            list.innerHTML += `
+                <div class="chat-tile" onclick="sys.openChat('${id}')">
+                    <div class="avatar">${id[0].toUpperCase()}</div>
+                    <div class="tile-content">
+                        <div style="font-weight:600; margin-bottom:4px;">${id}</div>
+                        <div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:200px;">${lastMsg}</div>
                     </div>
                 </div>`;
-            list.innerHTML += html;
         });
     },
 
-    renderChat() {
-        const flow = document.getElementById('chat-flow');
-        flow.innerHTML = '';
-        const msgs = this.data.chats[this.state.activeChat] || [];
-        
-        let lastDay = null;
-
-        msgs.forEach(m => {
-            const date = new Date(m.ts);
-            const time = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const isMe = m.sid === this.uid;
-            
-            flow.innerHTML += `
-                <div class="msg ${isMe ? 'sent' : 'received'}">
-                    ${m.text}
-                    <span class="msg-time">${time}</span>
-                </div>`;
-        });
-        
-        requestAnimationFrame(() => flow.scrollTop = flow.scrollHeight);
-    },
-
-    openChat(id) {
-        this.state.activeChat = id;
-        this.updateHeaderUI(id);
-        this.renderChat();
-        this.nav('view-chat');
-        // Tenta conectar para atualizar perfil
-        const conn = this.peer.connect(id);
-        conn.on('open', () => this.sendProfile(conn));
-    },
-
-    updateHeaderUI(id) {
-        const f = this.data.friends[id] || {};
-        document.getElementById('chat-header-name').innerText = f.name || id;
-        document.getElementById('chat-av').innerHTML = f.pic ? `<img src="${f.pic}">` : id[0].toUpperCase();
-    },
-
-    // --- PROFILE ---
-    updateMeUI() {
-        const p = this.data.profile;
-        document.getElementById('home-name').innerText = p.name || this.uid;
-        document.getElementById('set-name').value = p.name;
-        document.getElementById('set-pic').value = p.pic;
-        document.getElementById('display-my-id').innerText = this.uid;
-        
-        const imgHtml = p.pic ? `<img src="${p.pic}">` : this.uid[0].toUpperCase();
-        document.getElementById('home-av').innerHTML = imgHtml;
-        document.getElementById('profile-large-av').innerHTML = imgHtml;
-    },
-
-    saveProfile() {
-        this.data.profile.name = document.getElementById('set-name').value;
-        this.data.profile.pic = document.getElementById('set-pic').value;
-        this.save();
-        this.updateMeUI();
-        this.toast('Perfil atualizado!');
-        this.back();
-    },
-
-    sendProfile(conn) {
-        conn.send({ 
-            type: 'profile', 
-            name: this.data.profile.name || this.uid, 
-            pic: this.data.profile.pic 
-        });
-    },
-
-    addContact() {
-        const id = document.getElementById('target-id').value.trim().toLowerCase();
-        if(id && id !== this.uid) {
-            if(!this.data.chats[id]) this.data.chats[id] = [];
-            this.save();
-            this.openChat(id);
-        } else {
-            this.toast('ID inválido');
+    // --- VÍDEO E ÁUDIO (CORREÇÃO TELA PRETA) ---
+    async getStream(videoMode) {
+        try {
+            return await navigator.mediaDevices.getUserMedia({ video: videoMode, audio: true });
+        } catch(err) {
+            console.error("Erro mídia:", err);
+            this.notify("Erro: Câmera bloqueada ou sem HTTPS.");
+            throw err;
         }
     },
 
-    // --- CALLS ---
-    async startCall(video) {
+    async initCall(videoMode) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video, audio: true });
-            this.state.localStream = stream;
-            this.showCallUI(true);
-            document.getElementById('local-video').srcObject = stream;
+            this.nav('view-call');
+            this.localStream = await this.getStream(videoMode);
             
-            const call = this.peer.call(this.state.activeChat, stream);
-            this.handleCallStream(call);
-        } catch(e) {
-            this.toast('Erro ao acessar câmera/microfone');
-            console.error(e);
+            // Exibir local
+            const localVid = document.getElementById('local-video');
+            localVid.srcObject = this.localStream;
+            localVid.play(); // Forçar play
+
+            const call = this.peer.call(this.activeChat, this.localStream);
+            this.handleCallEvents(call);
+        } catch(e) { 
+            this.nav('view-chat'); 
         }
     },
 
     async answerCall(call) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            this.state.localStream = stream;
-            this.showCallUI(false); // Recebendo
-            document.getElementById('local-video').srcObject = stream;
+            this.nav('view-call');
+            this.activeChat = call.peer; // Atualiza contexto
+            this.localStream = await this.getStream(true);
             
-            call.answer(stream);
-            this.handleCallStream(call);
+            const localVid = document.getElementById('local-video');
+            localVid.srcObject = this.localStream;
+            localVid.play();
+
+            call.answer(this.localStream);
+            this.handleCallEvents(call);
         } catch(e) {
-            this.toast('Erro ao acessar mídia');
+            this.nav('view-home');
         }
     },
 
-    handleCallStream(call) {
-        this.state.call = call;
-        document.getElementById('call-status-text').innerText = "Conectando...";
+    handleCallEvents(call) {
+        this.currentCall = call;
         
         call.on('stream', remoteStream => {
-            document.getElementById('remote-video').srcObject = remoteStream;
-            document.getElementById('call-status-overlay').style.display = 'none';
+            // Ocultar status de "conectando"
+            document.getElementById('call-status').style.display = 'none';
+            
+            const remoteVid = document.getElementById('remote-video');
+            remoteVid.srcObject = remoteStream;
+            
+            // PROMISE CHAIN PARA GARANTIR REPRODUÇÃO
+            const playPromise = remoteVid.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log('Auto-play foi impedido. Mostrando botão de Play manual.');
+                });
+            }
         });
-        
+
         call.on('close', () => this.endCall());
+        call.on('error', () => {
+            this.notify("Erro na chamada.");
+            this.endCall();
+        });
     },
 
     endCall() {
-        if(this.state.call) this.state.call.close();
-        if(this.state.localStream) this.state.localStream.getTracks().forEach(t => t.stop());
-        document.getElementById('call-ui').classList.remove('active');
-        this.state.call = null;
-    },
-
-    showCallUI(isCalling) {
-        const ui = document.getElementById('call-ui');
-        ui.classList.add('active');
-        document.getElementById('call-status-overlay').style.display = 'flex';
+        if(this.currentCall) this.currentCall.close();
+        if(this.localStream) {
+            this.localStream.getTracks().forEach(track => track.stop());
+        }
         
-        const f = this.data.friends[this.state.activeChat] || {};
-        const img = f.pic ? `<img src="${f.pic}">` : (this.state.activeChat ? this.state.activeChat[0].toUpperCase() : '?');
-        document.getElementById('call-avatar-placeholder').innerHTML = img;
-        document.getElementById('call-status-text').innerText = isCalling ? "Chamando..." : "Conectando...";
+        // Reset UI
+        document.getElementById('remote-video').srcObject = null;
+        document.getElementById('local-video').srcObject = null;
+        document.getElementById('call-status').style.display = 'block';
+        
+        this.currentCall = null;
+        this.localStream = null;
+        this.nav('view-chat');
     },
 
     toggleMute() {
-        if(!this.state.localStream) return;
-        const track = this.state.localStream.getAudioTracks()[0];
-        track.enabled = !track.enabled;
-        this.toast(track.enabled ? 'Microfone Ativado' : 'Microfone Mudo');
-    },
-
-    // --- NAVIGATION & UTILS ---
-    nav(id) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    },
-
-    back() {
-        if(document.getElementById('view-chat').classList.contains('active')) {
-            this.state.activeChat = null;
-            this.renderHome();
+        if(this.localStream) {
+            const track = this.localStream.getAudioTracks()[0];
+            track.enabled = !track.enabled;
+            document.getElementById('btn-mute').style.background = track.enabled ? 'rgba(255,255,255,0.15)' : 'var(--danger)';
+            this.notify(track.enabled ? "Microfone Ativado" : "Microfone Mudo");
         }
-        this.nav('view-home');
     },
 
-    toast(msg) {
+    // --- UTILITÁRIOS ---
+    nav(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        if(viewId === 'view-home') this.renderHomeList();
+    },
+    
+    openNewChatModal() { document.getElementById('view-new').classList.add('active'); },
+    
+    notify(msg, type='info') {
         const t = document.getElementById('toast');
-        document.getElementById('toast-msg').innerText = msg;
+        const m = document.getElementById('toast-msg');
+        m.innerText = msg;
+        t.style.borderLeft = type === 'error' ? '4px solid red' : '4px solid var(--success)';
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 3000);
     },
 
     copyId() {
-        navigator.clipboard.writeText(this.uid);
-        this.toast('ID copiado!');
+        navigator.clipboard.writeText(this.myId);
+        this.notify("ID copiado para a área de transferência");
     },
-
-    getName(id) {
-        return (this.data.friends[id] && this.data.friends[id].name) ? this.data.friends[id].name : id;
-    },
-
-    showContactInfo() {
-        // Implementação simplificada: apenas toast por enquanto
-        this.toast('ID: ' + this.state.activeChat);
-    },
-
-    logout() {
-        if(confirm('Tem certeza? Isso apagará o histórico local.')) {
-            localStorage.clear();
-            location.reload();
-        }
-    },
-
-    save() {
-        localStorage.setItem('cr_friends', JSON.stringify(this.data.friends));
-        localStorage.setItem('cr_chats', JSON.stringify(this.data.chats));
-        localStorage.setItem('cr_profile', JSON.stringify(this.data.profile));
-    }
+    
+    logout() { localStorage.clear(); location.reload(); },
+    save() { localStorage.setItem('cr_chats', JSON.stringify(this.data.chats)); },
+    updateUI() { this.renderHomeList(); }
 };
 
-// Start
-app.init();
+sys.init();
 </script>
 </body>
 </html>
