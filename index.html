@@ -237,24 +237,26 @@ const sys = {
         };
     },
 
-    auth(isRegister) {
+        auth(isRegister) {
         const id = document.getElementById('auth-id').value.trim().toLowerCase();
         const pass = document.getElementById('auth-pass').value.trim();
-        if(id.length < 3 || pass.length < 3) return alert("Mínimo 3 caracteres");
+        if(id.length < 3 || pass.length < 3) return alert("ID/Senha muito curtos");
 
         if(isRegister) {
-            if(this.db[id]) return alert("ID já existe");
+            if(this.db[id]) return alert("ID já existe neste dispositivo");
             this.db[id] = { pass, name: id, bio: "Crimson User", pic: "", friends: {}, groups: {}, pending: {} };
             this.saveDb();
-            alert("Conta criada! Clique em Entrar.");
+            alert("Conta criada com sucesso!");
         } else {
-            if(!this.db[id] || this.db[id].pass !== pass) return alert("Credenciais inválidas");
+            if(!this.db[id]) return alert("ID não encontrado. Crie uma conta primeiro.");
+            if(this.db[id].pass !== pass) return alert("Senha incorreta.");
+            
             this.uid = id;
-            if(!this.db[id].pending) this.db[id].pending = {}; 
             localStorage.setItem('crimson_session', id);
             this.startApp();
         }
     },
+
 
     startApp() {
         document.getElementById('auth-screen').style.display = 'none';
@@ -285,58 +287,71 @@ const sys = {
         localStorage.setItem('crimson_db', JSON.stringify(this.db));
     },
 
-    // --- LÓGICA DO SERVER (WEBSOCKET) ---
     connectServer() {
         try {
             this.ws = new WebSocket(this.serverUrl);
             
             this.ws.onopen = () => {
-                console.log('Server Connected');
-                // Autenticação no Socket
+                console.log('✅ Conectado ao Servidor');
+                // Autentica e solicita mensagens pendentes do MongoDB
                 this.ws.send(JSON.stringify({ type: 'auth', id: this.uid }));
                 
-                // Indicador Visual
-                document.getElementById('connection-status').innerText = 'ONLINE';
-                document.getElementById('connection-status').style.color = 'var(--primary)';
+                if(document.getElementById('connection-status')) {
+                    document.getElementById('connection-status').innerText = 'ONLINE';
+                    document.getElementById('connection-status').style.color = 'var(--primary)';
+                }
             };
 
-// Localize no seu código a parte que recebe as mensagens do WebSocket
-this.ws.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    
-    if (data.type === 'receipt') {
-        // Lógica de atualizar os ticks (não mexa no que você já tem de visual)
-        this.updateStatus(data.senderId || data.targetId, data.msgId, data.status);
-    } else {
-        // SE FOR MENSAGEM OU ÁUDIO
-        const sender = data.senderId;
-        // Cria o contato se não existir
-        if(!this.db[this.uid].friends[sender]) {
-            this.db[this.uid].friends[sender] = { name: sender, history: [] };
-        }
-        
-        // ADICIONA AO HISTÓRICO APENAS SE A MENSAGEM NÃO EXISTIR (EVITA DUPLICIDADE)
-        const history = this.db[this.uid].friends[sender].history;
-        if (!history.find(m => m.id === data.id)) {
-            history.push({
-                id: data.id,
-                sender: sender,
-                text: data.text,
-                time: Date.now(),
-                status: 'delivered' // Mensagem chegou, status padrão
-            });
-            this.saveDb();
-        }
+            this.ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                
+                // Trata recibos separadamente para não bugar a renderização
+                if (data.type === 'receipt') {
+                    this.updateStatus(data.targetId || data.senderId, data.msgId, data.status);
+                    return;
+                }
 
-        // Se o chat estiver aberto, renderiza e avisa o servidor que lemos (para o tick ficar verde no outro lado)
-        if (this.currentChat === sender) {
-            this.renderMessages();
-            this.markAsRead(sender); 
-        } else {
-            this.renderHome(); // Atualiza a lista de conversas com a nova mensagem
-        }
-    }
-};
+                // Processa Mensagem (Texto ou Áudio)
+                const sender = data.senderId;
+                if(!sender) return;
+
+                if(!this.db[this.uid].friends[sender]) {
+                    this.db[this.uid].friends[sender] = { name: sender, history: [], bio: '', pic: '', lastSeen: Date.now() };
+                }
+                
+                const history = this.db[this.uid].friends[sender].history;
+                // Evita duplicidade se a mensagem vier pelo Peer e pelo WS ao mesmo tempo
+                if (!history.find(m => m.id === data.id)) {
+                    history.push({
+                        id: data.id,
+                        sender: sender,
+                        text: data.text,
+                        time: data.time || Date.now(),
+                        status: 'delivered',
+                        type: data.type === 'audio' ? 'audio' : 'text'
+                    });
+                    this.saveDb();
+                    
+                    // Se o chat estiver aberto, renderiza e avisa o servidor que lemos (Tick Verde)
+                    if (this.currentChat === sender) {
+                        this.renderMessages();
+                        this.markAsRead(sender); 
+                    } else {
+                        this.renderHome(); 
+                    }
+                }
+            };
+
+            this.ws.onclose = () => {
+                if(document.getElementById('connection-status')) {
+                    document.getElementById('connection-status').innerText = 'RECONECTANDO...';
+                    document.getElementById('connection-status').style.color = 'orange';
+                }
+                setTimeout(() => this.connectServer(), 3000);
+            };
+        } catch(e) { console.error("Erro WebSocket:", e); }
+    },
+
 
 
     // --- LÓGICA PEERJS (P2P) ---
@@ -416,49 +431,37 @@ this.ws.onmessage = (e) => {
         }
     },
 
-    // --- SISTEMA DE ENVIO (ATUALIZADO) ---
     send(content = null, type = 'text') {
-        let text = content;
-        const input = document.getElementById('msg-input');
-        
-        if(!text) {
-            text = input.value.trim();
-            input.value = '';
-            this.handleInput(); // Reset UI icons
-        }
-        
-        const target = this.currentChat;
-        if(!text || !target) return;
+        let text = content || document.getElementById('msg-input').value.trim();
+        if(!text || !this.currentChat) return;
+        if(!content) document.getElementById('msg-input').value = '';
 
-        // ID único para a mensagem
-        const msgId = Date.now() + Math.random().toString(36).substr(2, 9);
-        
-        // 1. Salva localmente primeiro (Optimistic UI)
+        const msgId = "MSG-" + Date.now() + Math.random().toString(36).substr(2, 5);
+        const target = this.currentChat;
+
         if(target.startsWith('group_')) {
             this.sendGroupMsg(target, text, type, msgId);
         } else {
-            // Chat Privado
-            this.pushMessage(target, this.uid, text, 'queued', msgId, type);
+            // Salva no seu histórico local (Optimistic UI)
+            this.pushMessage(target, this.uid, text, 'sent', msgId, type);
             this.renderMessages();
             
-            // 2. Tenta enviar via WebSocket (Prioridade)
+            // Envia via WebSocket para o Servidor/MongoDB
             if(this.ws && this.ws.readyState === WebSocket.OPEN) {
                 this.ws.send(JSON.stringify({
                     type: type,
                     targetId: target,
                     senderId: this.uid,
                     text: text,
-                    id: msgId
+                    id: msgId,
+                    time: Date.now()
                 }));
-            } else {
-                // 3. Fallback: Envia via PeerJS se Server estiver offline
-                // (Opcional: ou apenas marca como 'queued' para quando voltar)
-                const payload = { type: type === 'audio' ? 'audio' : 'msg', text, id: msgId };
-                this.sendMessageToPeer(target, payload);
             }
         }
+        this.handleInput();
         this.renderHome();
     },
+
 
     sendGroupMsg(groupId, text, type, msgId) {
         const grp = this.db[this.uid].groups[groupId];
