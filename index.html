@@ -300,51 +300,44 @@ const sys = {
                 document.getElementById('connection-status').style.color = 'var(--primary)';
             };
 
-            this.ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    this.handleServerData(data);
-                } catch(e) { console.error("Bad JSON", e); }
-            };
-
-            this.ws.onclose = () => {
-                console.log('Server Disconnected... Trying to reconnect');
-                document.getElementById('connection-status').innerText = 'CONECTANDO...';
-                document.getElementById('connection-status').style.color = 'var(--text-dim)';
-                setTimeout(() => this.connectServer(), 3000); // Auto-reconnect
-            };
-        } catch (e) {
-            console.log("Erro ao conectar WS:", e);
+// Localize no seu código a parte que recebe as mensagens do WebSocket
+this.ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    
+    if (data.type === 'receipt') {
+        // Lógica de atualizar os ticks (não mexa no que você já tem de visual)
+        this.updateStatus(data.senderId || data.targetId, data.msgId, data.status);
+    } else {
+        // SE FOR MENSAGEM OU ÁUDIO
+        const sender = data.senderId;
+        // Cria o contato se não existir
+        if(!this.db[this.uid].friends[sender]) {
+            this.db[this.uid].friends[sender] = { name: sender, history: [] };
         }
-    },
-
-    // Trata dados vindos do Proxy/Server
-    handleServerData(data) {
-        // Confirmação de entrega
-        if(data.type === 'receipt') {
-            if(data.status === 'sent') this.markAsSent(this.currentChat, data.msgId); 
-            if(data.status === 'delivered') this.markAsDelivered(this.currentChat, data.msgId); 
-            return;
+        
+        // ADICIONA AO HISTÓRICO APENAS SE A MENSAGEM NÃO EXISTIR (EVITA DUPLICIDADE)
+        const history = this.db[this.uid].friends[sender].history;
+        if (!history.find(m => m.id === data.id)) {
+            history.push({
+                id: data.id,
+                sender: sender,
+                text: data.text,
+                time: Date.now(),
+                status: 'delivered' // Mensagem chegou, status padrão
+            });
+            this.saveDb();
         }
 
-        // Recebimento de Mensagem (Privada ou Grupo)
-        if(data.type === 'msg' || data.type === 'audio') {
-            const msgType = data.type === 'audio' ? 'audio' : 'text';
-            
-            // Se tiver groupId, trata como grupo
-            if(data.groupId) {
-                this.handleGroupMessage(data);
-            } else {
-                // Mensagem Privada
-                this.pushMessage(data.senderId, data.senderId, data.text, 'received', data.id, msgType);
-                if(this.currentChat === data.senderId) {
-                    this.renderMessages();
-                } else {
-                    this.renderHome();
-                }
-            }
+        // Se o chat estiver aberto, renderiza e avisa o servidor que lemos (para o tick ficar verde no outro lado)
+        if (this.currentChat === sender) {
+            this.renderMessages();
+            this.markAsRead(sender); 
+        } else {
+            this.renderHome(); // Atualiza a lista de conversas com a nova mensagem
         }
-    },
+    }
+};
+
 
     // --- LÓGICA PEERJS (P2P) ---
     setupPeer() {
