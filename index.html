@@ -305,53 +305,99 @@ const sys = {
             this.ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
                 
-                // Trata recibos separadamente para não bugar a renderização
+                // 1. TRATAMENTO DE RECIBOS (TICKS)
                 if (data.type === 'receipt') {
-                    this.updateStatus(data.targetId || data.senderId, data.msgId, data.status);
+                    const chatId = data.groupId || data.targetId || data.senderId;
+                    const friend = this.db[this.uid].friends[chatId];
+                    
+                    if (friend) {
+                        if (data.status === 'read') {
+                            // Pinta todas as mensagens que VOCÊ enviou como lidas
+                            friend.history.forEach(m => { 
+                                if(m.sender === this.uid) m.status = 'read'; 
+                            });
+                        } else {
+                            // Atualiza status de uma mensagem específica (sent/delivered)
+                            const msg = friend.history.find(m => m.id === data.msgId);
+                            if (msg) msg.status = data.status;
+                        }
+                        this.saveDb();
+                        if (this.currentChat === chatId) this.renderMessages();
+                    }
                     return;
                 }
 
-                // Processa Mensagem (Texto ou Áudio)
+                // 2. RECEBIMENTO DE MENSAGEM (PRIVADA OU GRUPO)
                 const sender = data.senderId;
+                const gid = data.groupId;
                 if(!sender) return;
 
-                if(!this.db[this.uid].friends[sender]) {
-                    this.db[this.uid].friends[sender] = { name: sender, history: [], bio: '', pic: '', lastSeen: Date.now() };
-                }
-                
-                const history = this.db[this.uid].friends[sender].history;
-                // Evita duplicidade se a mensagem vier pelo Peer e pelo WS ao mesmo tempo
-                if (!history.find(m => m.id === data.id)) {
-                    history.push({
-                        id: data.id,
-                        sender: sender,
-                        text: data.text,
-                        time: data.time || Date.now(),
-                        status: 'delivered',
-                        type: data.type === 'audio' ? 'audio' : 'text'
-                    });
-                    this.saveDb();
-                    
-                    // Se o chat estiver aberto, renderiza e avisa o servidor que lemos (Tick Verde)
-                    if (this.currentChat === sender) {
-                        this.renderMessages();
-                        this.markAsRead(sender); 
-                    } else {
-                        this.renderHome(); 
+                // Lógica para Mensagens de Grupo
+                if(gid) {
+                    if(!this.db[this.uid].groups[gid]) {
+                        this.db[this.uid].groups[gid] = { name: data.groupName || 'Grupo', members: data.members || [], history: [] };
                     }
+                    const gHist = this.db[this.uid].groups[gid].history;
+                    if(!gHist.find(m => m.id === data.id)) {
+                        gHist.push({
+                            id: data.id,
+                            sender: sender,
+                            text: data.text,
+                            time: data.time || Date.now(),
+                            status: 'read',
+                            type: data.type === 'audio' ? 'audio' : 'text'
+                        });
+                        this.saveDb();
+                    }
+                } 
+                // Lógica para Mensagens Privadas
+                else {
+                    if(!this.db[this.uid].friends[sender]) {
+                        this.db[this.uid].friends[sender] = { name: sender, history: [], bio: '', pic: '', lastSeen: Date.now() };
+                    }
+                    const fHist = this.db[this.uid].friends[sender].history;
+                    if (!fHist.find(m => m.id === data.id)) {
+                        fHist.push({
+                            id: data.id,
+                            sender: sender,
+                            text: data.text,
+                            time: data.time || Date.now(),
+                            status: 'delivered',
+                            type: data.type === 'audio' ? 'audio' : 'text'
+                        });
+                        this.saveDb();
+
+                        // Se o chat está aberto, avisa o remetente que você leu na hora
+                        if (this.currentChat === sender) {
+                            this.ws.send(JSON.stringify({ 
+                                type: 'receipt', 
+                                targetId: sender, 
+                                senderId: this.uid, 
+                                status: 'read' 
+                            }));
+                        }
+                    }
+                }
+
+                // Atualiza a Interface
+                if (this.currentChat === (gid || sender)) {
+                    this.renderMessages();
+                } else {
+                    this.renderHome(); 
                 }
             };
 
             this.ws.onclose = () => {
-                if(document.getElementById('connection-status')) {
-                    document.getElementById('connection-status').innerText = 'RECONECTANDO...';
-                    document.getElementById('connection-status').style.color = 'orange';
+                const statusEl = document.getElementById('connection-status');
+                if(statusEl) {
+                    statusEl.innerText = 'RECONECTANDO...';
+                    statusEl.style.color = 'orange';
                 }
                 setTimeout(() => this.connectServer(), 3000);
             };
-        } catch(e) { console.error("Erro WebSocket:", e); }
-    },
-
+        } catch(e) { 
+            console.error("❌ Erro fatal no WebSocket:", e); 
+        }
 
 
     // --- LÓGICA PEERJS (P2P) ---
@@ -878,9 +924,30 @@ const sys = {
         this.updateChatHeader(id);
         this.renderMessages();
         this.openView('view-chat');
+        
         // Reset botão de input
         document.getElementById('msg-input').value = '';
         this.handleInput(); 
+
+        // --- LÓGICA DE TICK VERDE (READ RECEIPT) ---
+        if (this.ws && this.ws.readyState === WebSocket.OPEN && !id.startsWith('group_')) {
+            // 1. Avisa o servidor/remetente que você leu as mensagens
+            this.ws.send(JSON.stringify({
+                type: 'receipt',
+                targetId: id,
+                senderId: this.uid,
+                status: 'read'
+            }));
+
+            // 2. Atualiza localmente as mensagens que VOCÊ recebeu para 'read'
+            const friend = this.db[this.uid].friends[id];
+            if (friend) {
+                friend.history.forEach(m => {
+                    if (m.sender !== this.uid) m.status = 'read';
+                });
+                this.saveDb();
+            }
+        }
         
         if(!id.startsWith('group_')) {
             // Tenta conectar P2P se não estiver
@@ -897,11 +964,13 @@ const sys = {
         let name, pic;
         if(id.startsWith('group_')) {
             const g = this.db[this.uid].groups[id];
+            if(!g) return;
             name = g.name; pic = null;
             document.getElementById('chat-status-text').innerText = `${g.members.length} membros`;
             document.getElementById('chat-status-text').className = 'status-offline';
         } else {
             const f = this.db[this.uid].friends[id];
+            if(!f) return;
             name = f.name || id; pic = f.pic;
             this.updateChatStatusUI(id);
         }
@@ -958,6 +1027,7 @@ const sys = {
         this.closeView('view-create-group');
         this.openChat(gid);
     },
+
 
     saveProfile() {
         const me = this.db[this.uid];
