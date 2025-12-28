@@ -674,6 +674,18 @@ const sys = {
         }
     },
 
+    // NOVA FUNÇÃO: Reseta o áudio quando acaba sem reiniciar
+    resetAudio(id) {
+        const audio = document.getElementById(`audio-${id}`);
+        const icon = document.getElementById(`btn-icon-${id}`);
+        const slider = document.getElementById(`slider-${id}`);
+        
+        audio.pause();
+        audio.currentTime = 0;
+        icon.className = 'ri-play-fill';
+        slider.value = 0;
+    },
+
     updateAudioUI(id) {
         const audio = document.getElementById(`audio-${id}`);
         const slider = document.getElementById(`slider-${id}`);
@@ -926,7 +938,7 @@ const sys = {
                         </div>
                         <audio id="audio-${uniqueId}" src="${m.text}" 
                             ontimeupdate="sys.updateAudioUI('${uniqueId}')" 
-                            onended="sys.toggleAudio('${uniqueId}')"
+                            onended="sys.resetAudio('${uniqueId}')"
                             onloadedmetadata="document.getElementById('time-${uniqueId}').innerText = sys.formatTime(this.duration)"
                             style="display:none;"></audio>
                     </div>`;
