@@ -71,12 +71,21 @@
         .tick.sent { color: #d1d1d6; } /* 1 Check */
         .tick.delivered { color: #4ade80; } /* 2 Checks */
 
+        /* ÁUDIO PLAYER CUSTOMIZADO */
+        audio { height: 32px; max-width: 200px; filter: invert(1) hue-rotate(180deg); opacity: 0.8; border-radius: 20px; }
+        .sent audio { filter: brightness(0) invert(1); opacity: 1; }
+
         /* INPUTS */
         .input-bar { padding: 15px; display: flex; gap: 10px; background: var(--surface); border-top: 1px solid var(--border); align-items: center; }
         .field { flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; color: #fff; padding: 14px; font-size: 15px; outline: none; transition: 0.2s; height: 50px; }
         .field:focus { border-color: var(--primary); }
         .btn { padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
+
+        /* BOTÃO DE GRAVAR */
+        .btn-record { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); color: var(--text); flex-shrink: 0; }
+        .btn-record.recording { background: #ff0000; color: white; animation: pulse-rec 1s infinite; border-color: #ff0000; }
+        @keyframes pulse-rec { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         
         /* PROFILES */
         .profile-hero { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; text-align: center; overflow-y: auto; }
@@ -200,6 +209,9 @@
         </header>
         <div id="messages" class="chat-area"></div>
         <div class="input-bar">
+            <button class="btn btn-record" id="btn-audio-rec" onclick="sys.toggleVoiceMsg()">
+                <i class="ri-mic-fill"></i>
+            </button>
             <input type="text" id="msg-input" class="field" placeholder="Mensagem...">
             <button class="btn" style="width:50px; height:50px; padding:0; flex-shrink:0;" onclick="sys.send()"><i class="ri-send-plane-fill" style="font-size:20px;"></i></button>
         </div>
@@ -323,6 +335,9 @@ const sys = {
     micEnabled: true,
     speakerEnabled: true,
     statusInterval: null,
+    // Áudio
+    audioRecorder: null,
+    audioChunks: [],
 
     init() {
         const raw = localStorage.getItem('crimson_db');
@@ -346,14 +361,13 @@ const sys = {
 
         if(isRegister) {
             if(this.db[id]) return alert("ID já existe");
-            // Adicionado 'pending' para msgs offline
             this.db[id] = { pass, name: id, bio: "Crimson User", pic: "", friends: {}, groups: {}, pending: {} };
             this.saveDb();
             alert("Conta criada! Clique em Entrar.");
         } else {
             if(!this.db[id] || this.db[id].pass !== pass) return alert("Credenciais inválidas");
             this.uid = id;
-            if(!this.db[id].pending) this.db[id].pending = {}; // Migração
+            if(!this.db[id].pending) this.db[id].pending = {}; 
             localStorage.setItem('crimson_session', id);
             this.startApp();
         }
@@ -364,7 +378,8 @@ const sys = {
         this.setupPeer();
         this.updateHeader();
         this.renderHome();
-        // Loop para atualizar status "Visto há X minutos"
+        
+        // Loop de status
         this.statusInterval = setInterval(() => {
             if(this.currentChat && !this.currentChat.startsWith('group_')) {
                 this.updateChatStatusUI(this.currentChat);
@@ -386,7 +401,15 @@ const sys = {
         
         this.peer.on('open', (id) => {
             console.log('Online:', id);
-            this.checkAndFlushPending(); // Envia mensagens que ficaram na fila
+            this.checkAndFlushPending();
+            // Tenta reconectar para avisar que estou online
+            const friends = this.db[this.uid].friends;
+            Object.keys(friends).forEach(fid => {
+                 if(!this.activeConns[fid]) {
+                    const c = this.peer.connect(fid);
+                    this.setupConnectionEvents(c);
+                 }
+            });
         });
 
         this.peer.on('connection', (conn) => {
@@ -402,7 +425,6 @@ const sys = {
         
         this.peer.on('error', err => {
             console.log("Peer Error:", err.type);
-            // Se falhar ao conectar para enviar mensagem, já foi salvo como pendente no 'send'
         });
     },
 
@@ -410,15 +432,16 @@ const sys = {
         this.activeConns[conn.peer] = conn;
         
         conn.on('open', () => {
-            // Se conectou, o usuário está online
+            // CORREÇÃO STATUS: Atualiza para online assim que conecta
             this.updateUserStatus(conn.peer, 'online');
             this.sendProfile(conn);
-            this.flushPendingToPeer(conn.peer); // Se eu tenho msg pra ele, envio agora
+            this.flushPendingToPeer(conn.peer);
         });
 
         conn.on('data', (data) => this.handleData(conn.peer, data));
         
         conn.on('close', () => {
+            // CORREÇÃO STATUS: Atualiza lastSeen imediatamente
             this.updateUserStatus(conn.peer, 'offline');
         });
 
@@ -433,6 +456,7 @@ const sys = {
         const friend = this.db[this.uid].friends[id];
         
         friend.status = status;
+        // Sempre atualiza lastSeen se ficar offline
         if(status === 'offline') {
             friend.lastSeen = Date.now();
         }
@@ -452,8 +476,10 @@ const sys = {
              statusEl.innerHTML = '<span class="online-dot"></span>Online';
              statusEl.className = 'status-online';
         } else {
-            const time = f.lastSeen ? new Date(f.lastSeen).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Desconhecido';
-            const date = f.lastSeen ? new Date(f.lastSeen).toLocaleDateString() : '';
+            // CORREÇÃO: Garante que "lastSeen" exista, senão usa um padrão antigo ou "Agora"
+            const ts = f.lastSeen || Date.now(); 
+            const time = new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            const date = new Date(ts).toLocaleDateString();
             const today = new Date().toLocaleDateString();
             const displayDate = date === today ? 'hoje' : date;
             
@@ -462,33 +488,74 @@ const sys = {
         }
     },
 
-    // --- MENSAGENS ---
+    // --- MENSAGENS E ÁUDIO ---
+    
+    // Controle de Gravação
+    async toggleVoiceMsg() {
+        const btn = document.getElementById('btn-audio-rec');
+        
+        if(!this.audioRecorder) {
+            // Iniciar Gravação
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                this.audioRecorder = new MediaRecorder(stream);
+                this.audioChunks = [];
+                
+                this.audioRecorder.ondataavailable = e => this.audioChunks.push(e.data);
+                
+                this.audioRecorder.onstop = () => {
+                    const blob = new Blob(this.audioChunks, { type: 'audio/webm;codecs=opus' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64 = reader.result; // Data URI completo
+                        this.send(base64, 'audio'); // Envia como tipo audio
+                    };
+                    reader.readAsDataURL(blob);
+                    
+                    stream.getTracks().forEach(t => t.stop()); // Libera mic
+                    this.audioRecorder = null;
+                };
+                
+                this.audioRecorder.start();
+                btn.classList.add('recording');
+                btn.innerHTML = '<i class="ri-stop-fill"></i>';
+            } catch(e) {
+                alert("Erro ao acessar microfone.");
+            }
+        } else {
+            // Parar e Enviar
+            this.audioRecorder.stop();
+            btn.classList.remove('recording');
+            btn.innerHTML = '<i class="ri-mic-fill"></i>';
+        }
+    },
+
     handleData(senderId, data) {
-        // Recibo (Tick Duplo)
         if(data.type === 'receipt') {
             this.markAsDelivered(senderId, data.msgId);
             return;
         }
 
-        // Mensagem Texto
-        if(data.type === 'msg') {
+        if(data.type === 'msg' || data.type === 'audio') {
             const conn = this.activeConns[senderId];
-            if(conn && conn.open) conn.send({ type: 'receipt', msgId: data.id }); // Confirma recebimento
+            if(conn && conn.open) conn.send({ type: 'receipt', msgId: data.id });
 
             if(data.groupId) {
                 this.handleGroupMessage(data);
                 return;
             }
 
-            this.pushMessage(senderId, senderId, data.text, 'received', data.id);
+            // Detecta se é audio ou texto
+            const msgType = data.type === 'audio' ? 'audio' : 'text';
+            this.pushMessage(senderId, senderId, data.text, 'received', data.id, msgType);
+            
             if(this.currentChat === senderId) this.renderMessages();
             else this.renderHome();
         }
 
-        // Sync Perfil
         if(data.type === 'sync') {
             if(!this.db[this.uid].friends[senderId]) {
-                this.db[this.uid].friends[senderId] = { history: [] };
+                this.db[this.uid].friends[senderId] = { history: [], lastSeen: Date.now() };
             }
             const f = this.db[this.uid].friends[senderId];
             f.name = data.name; f.bio = data.bio; f.pic = data.pic;
@@ -497,58 +564,57 @@ const sys = {
             if(this.currentChat === senderId) this.updateChatHeader(senderId);
         }
         
-        // Voz
         if(data.type === 'call_type' && data.mode === 'voice') {
             this.isVoiceOnly = true;
             this.updateCallUI();
         }
     },
 
-    send() {
-        const input = document.getElementById('msg-input');
-        const text = input.value.trim();
+    send(content = null, type = 'text') {
+        // Se content for passado (ex: audio base64), usa ele. Senão pega do input.
+        let text = content;
+        if(!text) {
+            const input = document.getElementById('msg-input');
+            text = input.value.trim();
+            input.value = '';
+        }
+        
         const target = this.currentChat;
         if(!text || !target) return;
 
         const msgId = Date.now() + Math.random().toString(36).substr(2, 9);
-        input.value = '';
+        
+        // Payload base
+        const payload = { type: type === 'audio' ? 'audio' : 'msg', text, id: msgId };
 
         if(target.startsWith('group_')) {
             const grp = this.db[this.uid].groups[target];
-            grp.history.push({ sender: this.uid, text, time: Date.now(), status: 'sent', id: msgId });
+            // Salva localmente
+            grp.history.push({ sender: this.uid, text, time: Date.now(), status: 'sent', id: msgId, type });
             this.saveDb();
             this.renderMessages();
 
+            // Envia para membros
             grp.members.forEach(memberId => {
                 if(memberId !== this.uid) {
-                    this.sendMessageToPeer(memberId, {
-                        type: 'msg', text, id: msgId, groupId: target, groupName: grp.name, senderId: this.uid
-                    });
+                    this.sendMessageToPeer(memberId, { ...payload, groupId: target, groupName: grp.name, senderId: this.uid });
                 }
             });
         } else {
             // Privado
-            // Status inicial: 'queued' (pendente)
-            this.pushMessage(target, this.uid, text, 'queued', msgId);
+            this.pushMessage(target, this.uid, text, 'queued', msgId, type);
             this.renderMessages();
-            
-            // Tenta enviar
-            this.sendMessageToPeer(target, { type: 'msg', text, id: msgId });
+            this.sendMessageToPeer(target, payload);
         }
         this.renderHome();
     },
 
     sendMessageToPeer(targetId, payload) {
-        // Se conectado, envia direto
         if(this.activeConns[targetId] && this.activeConns[targetId].open) {
             this.activeConns[targetId].send(payload);
-            // Atualiza status local para 'sent' (1 tick)
             if(!payload.groupId) this.markAsSent(targetId, payload.id);
         } else {
-            // Se não conectado, salva na fila pendente
             this.queueMessage(targetId, payload);
-            
-            // Tenta conectar (se conseguir, o evento 'open' vai disparar flushPendingToPeer)
             const conn = this.peer.connect(targetId);
             this.setupConnectionEvents(conn);
         }
@@ -567,12 +633,10 @@ const sys = {
         if(queue && queue.length > 0) {
             const conn = this.activeConns[peerId];
             if(conn && conn.open) {
-                // Envia todas
                 queue.forEach(payload => {
                     conn.send(payload);
                     if(!payload.groupId) this.markAsSent(peerId, payload.id);
                 });
-                // Limpa fila
                 delete this.db[this.uid].pending[peerId];
                 this.saveDb();
                 if(this.currentChat === peerId) this.renderMessages();
@@ -581,7 +645,6 @@ const sys = {
     },
     
     checkAndFlushPending() {
-        // Varre todos pendentes e tenta reconectar
         Object.keys(this.db[this.uid].pending).forEach(targetId => {
             if(!this.activeConns[targetId] || !this.activeConns[targetId].open) {
                 const conn = this.peer.connect(targetId);
@@ -614,12 +677,13 @@ const sys = {
         }
     },
 
-    pushMessage(friendId, senderId, text, status, id) {
+    pushMessage(friendId, senderId, text, status, id, type='text') {
         if(!this.db[this.uid].friends[friendId]) {
-            this.db[this.uid].friends[friendId] = { history: [] };
+            // Inicializa lastSeen aqui também para evitar "Desconhecido"
+            this.db[this.uid].friends[friendId] = { history: [], lastSeen: Date.now() };
         }
         this.db[this.uid].friends[friendId].history.push({
-            sender: senderId, text, time: Date.now(), status, id
+            sender: senderId, text, time: Date.now(), status, id, type
         });
         this.saveDb();
     },
@@ -629,8 +693,10 @@ const sys = {
         if(!groups[data.groupId]) {
             groups[data.groupId] = { name: data.groupName, members: data.members || [], history: [] };
         }
+        // Determina tipo (se o payload for audio)
+        const type = data.type === 'audio' ? 'audio' : 'text';
         groups[data.groupId].history.push({
-            sender: data.senderId, text: data.text, time: Date.now(), status: 'read', id: data.id
+            sender: data.senderId, text: data.text, time: Date.now(), status: 'read', id: data.id, type
         });
         this.db[this.uid].groups = groups;
         this.saveDb();
@@ -648,9 +714,9 @@ const sys = {
         const area = document.getElementById('messages');
         area.innerHTML = '';
         let msgs = [];
-        if(this.currentChat.startsWith('group_')) {
+        if(this.currentChat && this.currentChat.startsWith('group_')) {
             msgs = this.db[this.uid].groups[this.currentChat].history || [];
-        } else {
+        } else if (this.currentChat) {
             msgs = this.db[this.uid].friends[this.currentChat].history || [];
         }
         
@@ -661,12 +727,10 @@ const sys = {
             
             let ticks = '';
             if(isMe && !this.currentChat.startsWith('group_')) {
-                let icon = '<i class="ri-time-line"></i>'; // Default queued
+                let icon = '<i class="ri-time-line"></i>'; 
                 let cls = 'tick queued';
-                
                 if(m.status === 'sent') { icon = '<i class="ri-check-line"></i>'; cls = 'tick sent'; }
                 if(m.status === 'delivered') { icon = '<i class="ri-check-double-line"></i>'; cls = 'tick delivered'; }
-                
                 ticks = `<span class="${cls}">${icon}</span>`;
             }
 
@@ -676,7 +740,15 @@ const sys = {
                  senderName = `<div style="font-size:10px; color:var(--primary); font-weight:bold; margin-bottom:2px;">${f ? f.name : m.sender}</div>`;
             }
 
-            div.innerHTML = `${senderName}${m.text}<div class="msg-meta"><span>${new Date(m.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>${ticks}</div>`;
+            // Renderiza Áudio ou Texto
+            let content = '';
+            if(m.type === 'audio') {
+                content = `<audio controls src="${m.text}"></audio>`;
+            } else {
+                content = m.text;
+            }
+
+            div.innerHTML = `${senderName}${content}<div class="msg-meta"><span>${new Date(m.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>${ticks}</div>`;
             area.appendChild(div);
         });
         area.scrollTop = area.scrollHeight;
@@ -692,13 +764,22 @@ const sys = {
         Object.keys(friends).forEach(id => {
             const f = friends[id];
             const last = f.history.length ? f.history[f.history.length-1] : null;
-            allChats.push({ id, name: f.name || id, pic: f.pic, lastMsg: last ? last.text : 'Nova conexão', time: last ? last.time : 0, type: 'user' });
+            let msgPreview = 'Nova conexão';
+            if(last) {
+                msgPreview = last.type === 'audio' ? '🎵 Áudio' : last.text;
+            }
+            allChats.push({ id, name: f.name || id, pic: f.pic, lastMsg: msgPreview, time: last ? last.time : 0, type: 'user' });
         });
 
         Object.keys(groups).forEach(id => {
             const g = groups[id];
             const last = g.history.length ? g.history[g.history.length-1] : null;
-            allChats.push({ id, name: g.name, pic: null, lastMsg: last ? `${last.sender}: ${last.text}` : 'Grupo criado', time: last ? last.time : 0, type: 'group' });
+            let msgPreview = 'Grupo criado';
+            if(last) {
+                const txt = last.type === 'audio' ? '🎵 Áudio' : last.text;
+                msgPreview = `${last.sender}: ${txt}`;
+            }
+            allChats.push({ id, name: g.name, pic: null, lastMsg: msgPreview, time: last ? last.time : 0, type: 'group' });
         });
 
         allChats.sort((a,b) => b.time - a.time);
@@ -726,7 +807,6 @@ const sys = {
         this.renderMessages();
         this.openView('view-chat');
         if(!id.startsWith('group_')) {
-            // Tenta reconectar e atualizar status UI
             if(!this.activeConns[id] || !this.activeConns[id].open) {
                 const conn = this.peer.connect(id);
                 this.setupConnectionEvents(conn);
@@ -763,7 +843,8 @@ const sys = {
         if(id === this.uid) return alert("Erro: Auto-adição.");
         if(id) {
             if(!this.db[this.uid].friends[id]) {
-                this.db[this.uid].friends[id] = { name: id, history: [], bio: '', pic: '', lastSeen: 0 };
+                // CORREÇÃO STATUS: Inicializa lastSeen para evitar "Desconhecido"
+                this.db[this.uid].friends[id] = { name: id, history: [], bio: '', pic: '', lastSeen: Date.now() };
                 this.saveDb();
             }
             this.closeView('view-add');
@@ -937,4 +1018,4 @@ const sys = {
 sys.init();
 </script>
 </body>
-            </html>
+</html>
