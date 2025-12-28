@@ -193,17 +193,13 @@ link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringif
 document.head.appendChild(link);
 
 const sys = {
-    // --- PROPRIEDADES PRINCIPAIS ---
     ws: null,
     serverUrl: 'wss://serverweb-3zfo.onrender.com', 
-    
     peer: null,
     uid: null,
     db: {}, 
     activeConns: {}, 
     currentChat: null,
-    
-    // --- VARIAVEIS DE ESTADO ---
     callStream: null,
     incomingCall: null,
     isVoiceOnly: false,
@@ -216,7 +212,6 @@ const sys = {
     audioChunks: [],
     canSendText: false,
 
-    // --- INICIALIZAÇÃO ---
     init() {
         const raw = localStorage.getItem('crimson_db');
         this.db = raw ? JSON.parse(raw) : {};
@@ -276,7 +271,6 @@ const sys = {
         localStorage.setItem('crimson_db', JSON.stringify(this.db));
     },
 
-    // --- LÓGICA DO SERVER (WEBSOCKET) ---
     connectServer() {
         try {
             this.ws = new WebSocket(this.serverUrl);
@@ -315,12 +309,20 @@ const sys = {
 
         if(data.type === 'msg' || data.type === 'audio') {
             const msgType = data.type === 'audio' ? 'audio' : 'text';
-            
+            const sender = data.senderId;
+
             if(data.groupId) {
                 this.handleGroupMessage(data);
             } else {
-                this.pushMessage(data.senderId, data.senderId, data.text, 'received', data.id, msgType);
-                if(this.currentChat === data.senderId) {
+                // CORREÇÃO OFFLINE: Se o remetente não existe, cria ele no DB local
+                if(!this.db[this.uid].friends[sender]) {
+                    this.db[this.uid].friends[sender] = { name: sender, history: [], bio: '', pic: '', lastSeen: Date.now() };
+                }
+                
+                // Grava a mensagem no histórico local imediatamente
+                this.pushMessage(sender, sender, data.text, 'received', data.id, msgType);
+                
+                if(this.currentChat === sender) {
                     this.renderMessages();
                 } else {
                     this.renderHome();
@@ -329,7 +331,6 @@ const sys = {
         }
     },
 
-    // --- LÓGICA PEERJS (P2P) ---
     setupPeer() {
         this.peer = new Peer(this.uid);
         this.peer.on('open', (id) => {
@@ -399,7 +400,6 @@ const sys = {
         }
     },
 
-    // --- SISTEMA DE ENVIO (ATUALIZADO PARA O SERVER NO RENDER) ---
     send(content = null, type = 'text') {
         let text = content;
         const input = document.getElementById('msg-input');
@@ -421,7 +421,6 @@ const sys = {
             this.pushMessage(target, this.uid, text, 'queued', msgId, type);
             this.renderMessages();
             
-            // CONVERSÃO PARA O SERVIDOR RENDER (Type msg em vez de text)
             if(this.ws && this.ws.readyState === WebSocket.OPEN) {
                 this.ws.send(JSON.stringify({
                     type: type === 'text' ? 'msg' : type,
