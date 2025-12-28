@@ -61,51 +61,114 @@
 
         /* CHAT */
         .chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 30px; }
-        .bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; display: flex; flex-direction: column; user-select: text; }
+        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; display: flex; flex-direction: column; user-select: text; }
         .sent { align-self: flex-end; background: var(--bubble-sent); color: #fff; border-bottom-right-radius: 4px; }
         .received { align-self: flex-start; background: var(--bubble-rec); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
         
         .msg-meta { font-size: 10px; margin-top: 4px; display: flex; align-items: center; gap: 4px; align-self: flex-end; opacity: 0.8; }
         .tick { font-size: 14px; }
-        .tick.queued { color: #a1a1aa; } /* Relógio/Pendente */
-        .tick.sent { color: #d1d1d6; } /* 1 Check */
-        .tick.delivered { color: #4ade80; } /* 2 Checks */
+        .tick.queued { color: #a1a1aa; }
+        .tick.sent { color: #d1d1d6; }
+        .tick.delivered { color: #4ade80; }
 
-        /* ÁUDIO PLAYER WHATSAPP STYLE */
-        .audio-wrapper { display: flex; align-items: center; gap: 10px; width: 220px; height: 40px; }
-        
-        /* Customizando o player nativo para parecer integrado */
-        audio {
-            width: 100%;
-            height: 36px;
-            outline: none;
+        /* --- NOVO DESIGN WHATSAPP AUDIO PLAYER --- */
+        .audio-player {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 240px;
+            padding: 5px 0;
+            user-select: none;
         }
-        
-        /* Webkit Controls Styling (Chrome/Safari/Android) */
-        audio::-webkit-media-controls-panel {
-            background-color: transparent; /* Fundo transparente para herdar a cor da bolha */
-        }
-        audio::-webkit-media-controls-play-button {
-            background-color: #fff; /* Botão branco */
-            color: var(--primary);
+
+        /* Botão Play/Pause */
+        .play-btn {
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            transform: scale(1.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            font-size: 24px;
+            transition: 0.2s;
         }
-        audio::-webkit-media-controls-current-time-display,
-        audio::-webkit-media-controls-time-remaining-display {
-            color: rgba(255,255,255,0.9);
-            font-size: 12px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-        }
-        /* Ajuste específico para a bolha Enviada vs Recebida */
-        .received audio::-webkit-media-controls-play-button {
-            background-color: var(--text-dim);
-        }
-        .sent audio::-webkit-media-controls-current-time-display,
-        .sent audio::-webkit-media-controls-time-remaining-display {
+        /* Cores baseadas em quem enviou */
+        .sent .play-btn {
+            background: rgba(255,255,255,0.2);
             color: #fff;
         }
+        .sent .play-btn:active { background: rgba(255,255,255,0.3); }
+        
+        .received .play-btn {
+            background: #27272a;
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        /* Área do slider e tempo */
+        .audio-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Input Range Customizado (Slider) */
+        .custom-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        /* Cor do trilho do slider */
+        .sent .custom-slider { background: rgba(255,255,255,0.3); }
+        .received .custom-slider { background: #333; }
+
+        /* Thumb (Bolinha do slider) */
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .sent .custom-slider::-webkit-slider-thumb { background: #fff; }
+        .received .custom-slider::-webkit-slider-thumb { background: var(--primary); }
+
+        .audio-duration {
+            font-size: 11px;
+            font-family: 'Inter', sans-serif;
+            font-variant-numeric: tabular-nums;
+            opacity: 0.8;
+        }
+
+        /* Avatar do microfone (estilo zap) */
+        .mic-avatar {
+            width: 30px; 
+            height: 42px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            opacity: 0.5;
+            position: relative;
+        }
+        .mic-avatar i { font-size: 20px; }
+        
+        /* Bolinha de status não ouvido (opcional) */
+        .audio-dot {
+            width: 8px; height: 8px; background: #4ade80; border-radius: 50%;
+            position: absolute; top: 0; right: -5px; display: none;
+        }
+        /* --- FIM AUDIO PLAYER --- */
+
 
         /* INPUTS */
         .input-bar { padding: 10px 15px; display: flex; gap: 10px; background: var(--surface); border-top: 1px solid var(--border); align-items: center; min-height: 70px; }
@@ -586,6 +649,60 @@ const sys = {
         }
     },
 
+    // --- LOGICA DO PLAYER CUSTOMIZADO (NOVO) ---
+    toggleAudio(id) {
+        const audio = document.getElementById(`audio-${id}`);
+        const icon = document.getElementById(`btn-icon-${id}`);
+        
+        // Pausa outros áudios
+        document.querySelectorAll('audio').forEach(a => {
+            if(a.id !== `audio-${id}` && !a.paused) {
+                a.pause();
+                // Reseta ícone dos outros
+                const otherId = a.id.replace('audio-','');
+                const otherIcon = document.getElementById(`btn-icon-${otherId}`);
+                if(otherIcon) otherIcon.className = 'ri-play-fill';
+            }
+        });
+
+        if (audio.paused) {
+            audio.play();
+            icon.className = 'ri-pause-fill';
+        } else {
+            audio.pause();
+            icon.className = 'ri-play-fill';
+        }
+    },
+
+    updateAudioUI(id) {
+        const audio = document.getElementById(`audio-${id}`);
+        const slider = document.getElementById(`slider-${id}`);
+        const timeDisplay = document.getElementById(`time-${id}`);
+        
+        if (!isNaN(audio.duration)) {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            slider.value = percent;
+            timeDisplay.innerText = this.formatTime(audio.currentTime);
+        }
+    },
+
+    seekAudio(id) {
+        const audio = document.getElementById(`audio-${id}`);
+        const slider = document.getElementById(`slider-${id}`);
+        
+        if (!isNaN(audio.duration)) {
+            const seekTime = (slider.value / 100) * audio.duration;
+            audio.currentTime = seekTime;
+        }
+    },
+
+    formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    },
+    // ------------------------------------------
+
     handleData(senderId, data) {
         if(data.type === 'receipt') {
             this.markAsDelivered(senderId, data.msgId);
@@ -789,12 +906,29 @@ const sys = {
                  senderName = `<div style="font-size:10px; color:var(--primary); font-weight:bold; margin-bottom:2px;">${f ? f.name : m.sender}</div>`;
             }
 
-            // Renderiza Áudio Estilizado
+            // --- RENDERIZA O PLAYER CUSTOMIZADO (ATUALIZADO) ---
             let content = '';
             if(m.type === 'audio') {
+                const uniqueId = m.id;
+                // Estrutura visual estilo WhatsApp
                 content = `
-                    <div class="audio-wrapper">
-                        <audio controls src="${m.text}"></audio>
+                    <div class="audio-player">
+                        <div class="play-btn" onclick="sys.toggleAudio('${uniqueId}')">
+                            <i class="ri-play-fill" id="btn-icon-${uniqueId}"></i>
+                        </div>
+                        <div class="audio-info">
+                            <input type="range" min="0" max="100" value="0" class="custom-slider" id="slider-${uniqueId}" oninput="sys.seekAudio('${uniqueId}')">
+                            <div class="audio-duration" id="time-${uniqueId}">0:00</div>
+                        </div>
+                        <div class="mic-avatar">
+                            <i class="ri-mic-fill"></i>
+                            <div class="audio-dot"></div>
+                        </div>
+                        <audio id="audio-${uniqueId}" src="${m.text}" 
+                            ontimeupdate="sys.updateAudioUI('${uniqueId}')" 
+                            onended="sys.toggleAudio('${uniqueId}')"
+                            onloadedmetadata="document.getElementById('time-${uniqueId}').innerText = sys.formatTime(this.duration)"
+                            style="display:none;"></audio>
                     </div>`;
             } else {
                 content = m.text;
@@ -1072,4 +1206,4 @@ const sys = {
 sys.init();
 </script>
 </body>
-                </html>
+</html>
